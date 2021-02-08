@@ -108,7 +108,7 @@
 //  -download save file to user's PC just incase - and allow user to upload if they want
 //  -hide/encode answers in csv somehow?
 //  -smooth out scrolling more that one 'set' (of 9 rebuses) with mousewheel/pad (don't slow down inbetweenthose scrolls??)
-//  subcategories - maybe add dropdown?// actually switch to 'tags' then each rebus can have unlmited categories. still need something for specific subcategeories, like RRG climbing puzzles though
+//  -subcategories - maybe add dropdown?// actually switch to 'tags' then each rebus can have unlmited categories. still need something for specific subcategeories, like RRG climbing puzzles though
 //  -fade in rectangle outline for active rebuses in desktop mode
 //  -Center displayed rebuses? display partial rebuses above if you can scroll up, or some other indication
 //  -stop double scroll when using mousepad...
@@ -133,8 +133,10 @@
 //  -make close button respond to window size change responsivley (add to resizeWindowResponsivley)
 //  -scroll bar (or other scroll indication?)
 //  -option to select, download, and share up to 9 at once - or 12 - creates a 8.5  x 11 (or a4) with their selected rebuses, and my logo
-//  -add copyright rebus city 2020 in footer
+//  -add copyright rebus city 2020 in footer (right in the middle?)
 //  -use list of categories instead of first/second/third, ect
+//  -add to github and share with greg
+//  -add js unit tests somehow
 
 
 
