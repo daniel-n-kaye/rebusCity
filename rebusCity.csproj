@@ -1,0 +1,480 @@
+﻿<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{141B6C07-613B-41BA-BEFD-81A9C064B71C}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>rebusCity</RootNamespace>
+    <AssemblyName>rebusCity</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <UseIISExpress>true</UseIISExpress>
+    <Use64BitIISExpress />
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
+      <HintPath>packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="CSS_rebusCity.css" />
+    <Content Include="data\dropdownArrowBlack.png" />
+    <Content Include="data\dropdownArrowGrey.png" />
+    <Content Include="data\hamburgerButton.png" />
+    <Content Include="data\Icon-1024.png" />
+    <Content Include="data\images\rebus_architecture_00.jpg" />
+    <Content Include="data\images\rebus_architecture_01.jpg" />
+    <Content Include="data\images\rebus_architecture_02.jpg" />
+    <Content Include="data\images\rebus_architecture_03.jpg" />
+    <Content Include="data\images\rebus_architecture_04.jpg" />
+    <Content Include="data\images\rebus_architecture_05.jpg" />
+    <Content Include="data\images\rebus_architecture_06.jpg" />
+    <Content Include="data\images\rebus_architecture_07.jpg" />
+    <Content Include="data\images\rebus_architecture_08.jpg" />
+    <Content Include="data\images\rebus_architecture_09.jpg" />
+    <Content Include="data\images\rebus_architecture_10.jpg" />
+    <Content Include="data\images\rebus_architecture_11.jpg" />
+    <Content Include="data\images\rebus_architecture_12.jpg" />
+    <Content Include="data\images\rebus_architecture_13.jpg" />
+    <Content Include="data\images\rebus_architecture_14.jpg" />
+    <Content Include="data\images\rebus_architecture_15.jpg" />
+    <Content Include="data\images\rebus_architecture_16.jpg" />
+    <Content Include="data\images\rebus_architecture_17.jpg" />
+    <Content Include="data\images\rebus_architecture_18.jpg" />
+    <Content Include="data\images\rebus_architecture_19.jpg" />
+    <Content Include="data\images\rebus_architecture_20.jpg" />
+    <Content Include="data\images\rebus_architecture_21.jpg" />
+    <Content Include="data\images\rebus_architecture_22.jpg" />
+    <Content Include="data\images\rebus_architecture_revit_23.jpg" />
+    <Content Include="data\images\rebus_architecture_revit_24.jpg" />
+    <Content Include="data\images\rebus_architecture_revit_25.jpg" />
+    <Content Include="data\images\rebus_architecture_revit_26.jpg" />
+    <Content Include="data\images\rebus_architecture_revit_27.jpg" />
+    <Content Include="data\images\rebus_architecture__revit_dynamo_28.jpg" />
+    <Content Include="data\images\rebus_beer_01.jpg" />
+    <Content Include="data\images\rebus_beer_02.jpg" />
+    <Content Include="data\images\rebus_beer_03.jpg" />
+    <Content Include="data\images\rebus_beer_04.jpg" />
+    <Content Include="data\images\rebus_beer_05.jpg" />
+    <Content Include="data\images\rebus_beer_06.jpg" />
+    <Content Include="data\images\rebus_beer_07.jpg" />
+    <Content Include="data\images\rebus_biking_01.jpg" />
+    <Content Include="data\images\rebus_biking_02.jpg" />
+    <Content Include="data\images\rebus_biking_03.jpg" />
+    <Content Include="data\images\rebus_biking_04.jpg" />
+    <Content Include="data\images\rebus_biking_05.jpg" />
+    <Content Include="data\images\rebus_biking_05a.jpg" />
+    <Content Include="data\images\rebus_biking_05b.jpg" />
+    <Content Include="data\images\rebus_biking_06.jpg" />
+    <Content Include="data\images\rebus_biking_07.jpg" />
+    <Content Include="data\images\rebus_biking_08.jpg" />
+    <Content Include="data\images\rebus_boston_00.jpg" />
+    <Content Include="data\images\rebus_boston_01.jpg" />
+    <Content Include="data\images\rebus_boston_02.jpg" />
+    <Content Include="data\images\rebus_boston_03.jpg" />
+    <Content Include="data\images\rebus_boston_04.jpg" />
+    <Content Include="data\images\rebus_boston_05.jpg" />
+    <Content Include="data\images\rebus_boston_06.jpg" />
+    <Content Include="data\images\rebus_boston_07.jpg" />
+    <Content Include="data\images\rebus_boston_08.jpg" />
+    <Content Include="data\images\rebus_boston_09.jpg" />
+    <Content Include="data\images\rebus_climbing_00.jpg" />
+    <Content Include="data\images\rebus_climbing_01.jpg" />
+    <Content Include="data\images\rebus_climbing_02.jpg" />
+    <Content Include="data\images\rebus_climbing_03.jpg" />
+    <Content Include="data\images\rebus_climbing_04.jpg" />
+    <Content Include="data\images\rebus_climbing_05.jpg" />
+    <Content Include="data\images\rebus_climbing_06.jpg" />
+    <Content Include="data\images\rebus_climbing_07.jpg" />
+    <Content Include="data\images\rebus_climbing_08.jpg" />
+    <Content Include="data\images\rebus_climbing_09.jpg" />
+    <Content Include="data\images\rebus_climbing_10.jpg" />
+    <Content Include="data\images\rebus_climbing_11.jpg" />
+    <Content Include="data\images\rebus_climbing_12.jpg" />
+    <Content Include="data\images\rebus_climbing_13.jpg" />
+    <Content Include="data\images\rebus_climbing_14.jpg" />
+    <Content Include="data\images\rebus_climbing_15.jpg" />
+    <Content Include="data\images\rebus_climbing_16.jpg" />
+    <Content Include="data\images\rebus_climbing_17.jpg" />
+    <Content Include="data\images\rebus_climbing_18.jpg" />
+    <Content Include="data\images\rebus_climbing_19.jpg" />
+    <Content Include="data\images\rebus_climbing_20.jpg" />
+    <Content Include="data\images\rebus_climbing_21.jpg" />
+    <Content Include="data\images\rebus_climbing_22.jpg" />
+    <Content Include="data\images\rebus_climbing_23.jpg" />
+    <Content Include="data\images\rebus_climbing_24.jpg" />
+    <Content Include="data\images\rebus_climbing_25.jpg" />
+    <Content Include="data\images\rebus_climbing_26.jpg" />
+    <Content Include="data\images\rebus_climbing_27.jpg" />
+    <Content Include="data\images\rebus_climbing_28.jpg" />
+    <Content Include="data\images\rebus_climbing_29.jpg" />
+    <Content Include="data\images\rebus_climbing_30.jpg" />
+    <Content Include="data\images\rebus_climbing_31.jpg" />
+    <Content Include="data\images\rebus_climbing_32.jpg" />
+    <Content Include="data\images\rebus_climbing_33.jpg" />
+    <Content Include="data\images\rebus_climbing_34.jpg" />
+    <Content Include="data\images\rebus_climbing_35.jpg" />
+    <Content Include="data\images\rebus_climbing_36.jpg" />
+    <Content Include="data\images\rebus_climbing_37.jpg" />
+    <Content Include="data\images\rebus_climbing_38.jpg" />
+    <Content Include="data\images\rebus_climbing_39.jpg" />
+    <Content Include="data\images\rebus_climbing_40.jpg" />
+    <Content Include="data\images\rebus_climbing_41_gunks.jpg" />
+    <Content Include="data\images\rebus_climbing_42.jpg" />
+    <Content Include="data\images\rebus_climbing_43.jpg" />
+    <Content Include="data\images\rebus_climbing_44.jpg" />
+    <Content Include="data\images\rebus_climbing_45.jpg" />
+    <Content Include="data\images\rebus_climbing_46.jpg" />
+    <Content Include="data\images\rebus_climbing_47.jpg" />
+    <Content Include="data\images\rebus_climbing_48.jpg" />
+    <Content Include="data\images\rebus_climbing_49_a_gunks.jpg" />
+    <Content Include="data\images\rebus_climbing_49_b_gunks.jpg" />
+    <Content Include="data\images\rebus_climbing_50_gunks.jpg" />
+    <Content Include="data\images\rebus_climbing_51_gunks.jpg" />
+    <Content Include="data\images\rebus_climbing_52.jpg" />
+    <Content Include="data\images\rebus_climbing_53.jpg" />
+    <Content Include="data\images\rebus_climbing_54.jpg" />
+    <Content Include="data\images\rebus_climbing_55.jpg" />
+    <Content Include="data\images\rebus_climbing_56_repeat.jpg" />
+    <Content Include="data\images\rebus_climbing_57.jpg" />
+    <Content Include="data\images\rebus_climbing_58.jpg" />
+    <Content Include="data\images\rebus_climbing_59.jpg" />
+    <Content Include="data\images\rebus_climbing_60.jpg" />
+    <Content Include="data\images\rebus_climbing_61.jpg" />
+    <Content Include="data\images\rebus_climbing_62.jpg" />
+    <Content Include="data\images\rebus_climbing_63.jpg" />
+    <Content Include="data\images\rebus_climbing_64.jpg" />
+    <Content Include="data\images\rebus_climbing_65.jpg" />
+    <Content Include="data\images\rebus_climbing_66.jpg" />
+    <Content Include="data\images\rebus_climbing_67.jpg" />
+    <Content Include="data\images\rebus_climbing_68.jpg" />
+    <Content Include="data\images\rebus_climbing_69.jpg" />
+    <Content Include="data\images\rebus_climbing_70.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_00.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_01.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_02.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_03.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_04.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_05.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_06.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_07.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_08.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_09.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_10.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_11.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_12.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_13.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_14.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_15.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_16.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_17.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_18.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_19.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_20.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_21.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_22.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_23.jpg" />
+    <Content Include="data\images\rebus_climbing_rrg_24.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_53.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_54.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_55.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_56.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_57.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_58.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_59.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_60.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_61.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_62.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_63.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_65.jpg" />
+    <Content Include="data\images\rebus_climbing_rumney_66.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_01.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_02.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_03.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_04.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_05.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_06.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_07.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_08.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_09.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_10.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_11.jpg" />
+    <Content Include="data\images\rebus_climbing_UK_12.jpg" />
+    <Content Include="data\images\rebus_example_00.jpg" />
+    <Content Include="data\images\rebus_example_01.jpg" />
+    <Content Include="data\images\rebus_example_02.jpg" />
+    <Content Include="data\images\rebus_general_01.jpg" />
+    <Content Include="data\images\rebus_general_02.jpg" />
+    <Content Include="data\images\rebus_general_04.jpg" />
+    <Content Include="data\images\rebus_general_05.jpg" />
+    <Content Include="data\images\rebus_general_06.jpg" />
+    <Content Include="data\images\rebus_general_07.jpg" />
+    <Content Include="data\images\rebus_general_08.jpg" />
+    <Content Include="data\images\rebus_general_09.jpg" />
+    <Content Include="data\images\rebus_general_10.jpg" />
+    <Content Include="data\images\rebus_general_11.jpg" />
+    <Content Include="data\images\rebus_general_12.jpg" />
+    <Content Include="data\images\rebus_general_13.jpg" />
+    <Content Include="data\images\rebus_general_14.jpg" />
+    <Content Include="data\images\rebus_general_15.jpg" />
+    <Content Include="data\images\rebus_general_16.jpg" />
+    <Content Include="data\images\rebus_general_17.jpg" />
+    <Content Include="data\images\rebus_general_18.jpg" />
+    <Content Include="data\images\rebus_general_19.jpg" />
+    <Content Include="data\images\rebus_general_20.jpg" />
+    <Content Include="data\images\rebus_general_21.jpg" />
+    <Content Include="data\images\rebus_general_22.jpg" />
+    <Content Include="data\images\rebus_general_23.jpg" />
+    <Content Include="data\images\rebus_general_24.jpg" />
+    <Content Include="data\images\rebus_general_26.jpg" />
+    <Content Include="data\images\rebus_general_27.jpg" />
+    <Content Include="data\images\rebus_general_28.jpg" />
+    <Content Include="data\images\rebus_general_29.jpg" />
+    <Content Include="data\images\rebus_general_30.jpg" />
+    <Content Include="data\images\rebus_general_32.jpg" />
+    <Content Include="data\images\rebus_general_33.jpg" />
+    <Content Include="data\images\rebus_general_34.jpg" />
+    <Content Include="data\images\rebus_general_35.jpg" />
+    <Content Include="data\images\rebus_general_36.jpg" />
+    <Content Include="data\images\rebus_general_37.jpg" />
+    <Content Include="data\images\rebus_general_38.jpg" />
+    <Content Include="data\images\rebus_general_39.jpg" />
+    <Content Include="data\images\rebus_general_40.jpg" />
+    <Content Include="data\images\rebus_general_41.jpg" />
+    <Content Include="data\images\rebus_general_42.jpg" />
+    <Content Include="data\images\rebus_general_43.jpg" />
+    <Content Include="data\images\rebus_general_44.jpg" />
+    <Content Include="data\images\rebus_general_45.jpg" />
+    <Content Include="data\images\rebus_general_46.jpg" />
+    <Content Include="data\images\Rebus_general_47_valentines day.jpg" />
+    <Content Include="data\images\Rebus_general_48_valentines day.jpg" />
+    <Content Include="data\images\rebus_general_49_valentines day.jpg" />
+    <Content Include="data\images\rebus_general_50_valentines day.jpg" />
+    <Content Include="data\images\rebus_general_51_valentines day.jpg" />
+    <Content Include="data\images\rebus_general_52_valentines day.jpg" />
+    <Content Include="data\images\rebus_general_53_coronavirus.jpg" />
+    <Content Include="data\images\rebus_general_54_coronavirus.jpg" />
+    <Content Include="data\images\rebus_general_55_coronavirus.jpg" />
+    <Content Include="data\images\rebus_general_56_coronavirus.jpg" />
+    <Content Include="data\images\rebus_general_57.jpg" />
+    <Content Include="data\images\rebus_general_58.jpg" />
+    <Content Include="data\images\rebus_general_59_hibt.jpg" />
+    <Content Include="data\images\rebus_general_60_hibt.jpg" />
+    <Content Include="data\images\rebus_general_61-hibt.jpg" />
+    <Content Include="data\images\rebus_general_62_hibt.jpg" />
+    <Content Include="data\images\rebus_general_63_hibt.jpg" />
+    <Content Include="data\images\rebus_general_64_hibt.jpg" />
+    <Content Include="data\images\rebus_general_65_hibt.jpg" />
+    <Content Include="data\images\rebus_general_66_hibt.jpg" />
+    <Content Include="data\images\rebus_general_67_hibt.jpg" />
+    <Content Include="data\images\rebus_general_68_hibt.jpg" />
+    <Content Include="data\images\rebus_general_69_hibt.jpg" />
+    <Content Include="data\images\rebus_general_70_hibt.jpg" />
+    <Content Include="data\images\rebus_general_71_holiday.jpg" />
+    <Content Include="data\images\rebus_general_72_hibt.jpg" />
+    <Content Include="data\images\rebus_general_73_hibt.jpg" />
+    <Content Include="data\images\rebus_general_74_hibt.jpg" />
+    <Content Include="data\images\rebus_general_75_hibt.jpg" />
+    <Content Include="data\images\rebus_general_76_hibt.jpg" />
+    <Content Include="data\images\rebus_general_77_hibt.jpg" />
+    <Content Include="data\images\rebus_general_78_hibt.jpg" />
+    <Content Include="data\images\rebus_general_79_hibt.jpg" />
+    <Content Include="data\images\rebus_general_80_hibt.jpg" />
+    <Content Include="data\images\rebus_general_81_hibt.jpg" />
+    <Content Include="data\images\rebus_general_82_hibt.jpg" />
+    <Content Include="data\images\rebus_general_83_hibt.jpg" />
+    <Content Include="data\images\rebus_general_84_hibt.jpg" />
+    <Content Include="data\images\rebus_general_85.jpg" />
+    <Content Include="data\images\rebus_general_86.jpg" />
+    <Content Include="data\images\rebus_harrypotter_01.jpg" />
+    <Content Include="data\images\rebus_harrypotter_02.jpg" />
+    <Content Include="data\images\rebus_harrypotter_03_a.jpg" />
+    <Content Include="data\images\rebus_harrypotter_03_b.jpg" />
+    <Content Include="data\images\rebus_music_00.jpg" />
+    <Content Include="data\images\rebus_music_01.jpg" />
+    <Content Include="data\images\rebus_music_02.jpg" />
+    <Content Include="data\images\rebus_music_03.jpg" />
+    <Content Include="data\images\rebus_music_04.jpg" />
+    <Content Include="data\images\rebus_music_05.jpg" />
+    <Content Include="data\images\rebus_music_06.jpg" />
+    <Content Include="data\images\rebus_music_07.jpg" />
+    <Content Include="data\images\rebus_music_08.jpg" />
+    <Content Include="data\images\rebus_music_09.jpg" />
+    <Content Include="data\images\rebus_music_10.jpg" />
+    <Content Include="data\images\rebus_music_11_a.jpg" />
+    <Content Include="data\images\rebus_music_11_b.jpg" />
+    <Content Include="data\images\rebus_music_13.jpg" />
+    <Content Include="data\images\rebus_music_14.jpg" />
+    <Content Include="data\images\rebus_music_15_bands.jpg" />
+    <Content Include="data\images\rebus_music_16_bands.jpg" />
+    <Content Include="data\images\rebus_music_17_bands.jpg" />
+    <Content Include="data\images\rebus_music_18_bands.jpg" />
+    <Content Include="data\images\rebus_music_23.jpg" />
+    <Content Include="data\images\rebus_music_24_Bands.jpg" />
+    <Content Include="data\images\rebus_music_drumming_19.jpg" />
+    <Content Include="data\images\rebus_music_drumming_20.jpg" />
+    <Content Include="data\images\rebus_music_drumming_21.jpg" />
+    <Content Include="data\images\rebus_music_drumming_22.jpg" />
+    <Content Include="data\images\rebus_neurology_00.jpg" />
+    <Content Include="data\images\rebus_programming_01.jpg" />
+    <Content Include="data\images\rebus_programming_02.jpg" />
+    <Content Include="data\images\rebus_programming_03.jpg" />
+    <Content Include="data\images\rebus_programming_04.jpg" />
+    <Content Include="data\images\rebus_programming_05.jpg" />
+    <Content Include="data\images\rebus_programming_06.jpg" />
+    <Content Include="data\images\rebus_programming_07.jpg" />
+    <Content Include="data\images\rebus_programming_08.jpg" />
+    <Content Include="data\images\rebus_programming_09.jpg" />
+    <Content Include="data\images\rebus_programming_10.jpg" />
+    <Content Include="data\images\rebus_programming_11.jpg" />
+    <Content Include="data\images\rebus_programming_12.jpg" />
+    <Content Include="data\images\rebus_snowboarding_00.jpg" />
+    <Content Include="data\images\rebus_snowboarding_01.jpg" />
+    <Content Include="data\images\rebus_snowboarding_02.jpg" />
+    <Content Include="data\images\rebus_snowboarding_02a.jpg" />
+    <Content Include="data\images\rebus_snowboarding_03.jpg" />
+    <Content Include="data\images\rebus_snowboarding_04.jpg" />
+    <Content Include="data\images\rebus_snowboarding_05.jpg" />
+    <Content Include="data\images\rebus_snowboarding_06.jpg" />
+    <Content Include="data\images\rebus_snowboarding_08.jpg" />
+    <Content Include="data\images\rebus_snowboarding_09.jpg" />
+    <Content Include="data\images\rebus_snowboarding_10.jpg" />
+    <Content Include="data\images\rebus_snowboarding_11.jpg" />
+    <Content Include="data\images\rebus_snowboarding_12.jpg" />
+    <Content Include="data\images\rebus_snowboarding_13.jpg" />
+    <Content Include="data\images\rebus_snowboarding_14.jpg" />
+    <Content Include="data\images\rebus_snowboarding_15.jpg" />
+    <Content Include="data\images\rebus_snowboarding_16.jpg" />
+    <Content Include="data\images\rebus_snowboarding_17.jpg" />
+    <Content Include="data\images\rebus_snowboarding_18.jpg" />
+    <Content Include="data\images\rebus_starwars_01.jpg" />
+    <Content Include="data\images\rebus_starwars_02.jpg" />
+    <Content Include="data\images\rebus_starwars_03.jpg" />
+    <Content Include="data\images\rebus_starwars_04.jpg" />
+    <Content Include="data\images\rebus_starwars_05.jpg" />
+    <Content Include="data\images\rebus_starwars_06.jpg" />
+    <Content Include="data\images\rebus_starwars_07.jpg" />
+    <Content Include="data\images\rebus_starwars_08.jpg" />
+    <Content Include="data\images\rebus_starwars_09.jpg" />
+    <Content Include="data\images\rebus_tv_00.jpg" />
+    <Content Include="data\images\rebus_woodworking_00.jpg" />
+    <Content Include="data\instagramIcon.png" />
+    <Content Include="data\preloading.gif" />
+    <Content Include="data\thinkOutsideTheBox.jpg" />
+    <Content Include="index.html" />
+    <Content Include="p5\lib\addons\p5.sound.js" />
+    <Content Include="p5\lib\addons\p5.sound.min.js" />
+    <Content Include="p5\lib\empty-example\index.html" />
+    <Content Include="p5\lib\empty-example\sketch.js" />
+    <Content Include="p5\lib\p5.js" />
+    <Content Include="p5\lib\p5.min.js" />
+    <Content Include="p5\lib\README.txt" />
+    <Content Include="p5\__MACOSX\lib\empty-example\._index.html" />
+    <Content Include="rebusCityLocal.js" />
+    <Content Include="Web.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="data\rebusCityDataTable.csv" />
+    <Content Include="data\rebusRanks.csv" />
+    <Content Include="p5\lib\.DS_Store" />
+    <Content Include="p5\__MACOSX\lib\._.DS_Store" />
+    <None Include="packages.config" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>53698</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:53698/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
