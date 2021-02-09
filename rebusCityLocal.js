@@ -141,13 +141,10 @@
 //  -use list of categories instead of first/second/third, ect
 //  -add to github and share with greg
 //  -add js unit tests somehow
+//  -refactor all x/y objects to use a single 2d vector object instead of two different variables for x and y
+//  -Update all methods using intellisense comments for visual studios
 
 // #endregion TODO
-
-//! test test method
-function testRebusMethod() {
-    return '7';
-}
 
 //#region GLOBAL VARIABLES
 
@@ -155,7 +152,10 @@ function testRebusMethod() {
 // Global Variables ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// for loading
+//! DEBUG & Testing variables
+let runUnitTests = true; //! Change to false before release!
+
+//! for loading
 let rebusDataTable; // holds imported csv data table as p5 table objects
 // path to google sheet that has published .csv file of rebus data table info
 const csvPath = 'data/rebusCityDataTable.csv';
@@ -165,7 +165,7 @@ let loadingImage; // image to display while loading
 let loading = true; // set to false once all rebus images have loaded
 let loadingCounter = 0; // keeps count of number of images that have finished loading, used in loading bar animaion
 
-// rebus variables and constants
+//! rebus variables and constants
 let totalNumberOfRebuses; // stores total number of rebuse puzzles so i don't have to querying it every time it's needed
 let rebuses = []; // stores array of all rebus objects
 let filteredRebusIndices = []; // stores the list of currently filtered rebus indices
@@ -180,42 +180,46 @@ let rebusWidthCurrent = 180;  // stores current width of rebus (changes responiv
 const horizontalSpacingMax = 25;  // spacing (px) between rebuses in desktop mode (no horz spacing in mobile mode)
 let horizontalSpacingCurrent = 25;  // current horizontal spacing based on screen size, could be horizontalSpacingMax or '0'
 let activeRebusWidthMobile = rebusWidthCurrent * 2; // width & height of active rebus images when displayed in mobile mode
+//TODO: Refactor these to use a 2d vector object
 let activeRebusMobileX; // initialized in resize function, because it is based on canvas width, X loc of top-left corner of active rebus image when drawing on mobile mode
 let activeRebusMobileY = 10; // X loc of top-left corner of active rebus image when drawing on mobile mode
 let numOfRowsThatFitOnscreen;  // stores the number of full rebuses that fit on the current screen, recalculated every time window is resized
 let rowHeight; // height (in pixels) of a row of rebuses, included buffer space (rebusWidthCurrent + horizontalSpacingCurrent) - updated whenever screen size changes
 let numOfRows; // number of rows of rebuses in the current category (filteredRebuses.length / 3, rounded up) - updates when category is changed
 
-// other object position variables
+//! other object position variables
 let textBoxHeightMobile = 40; // height of text box on mobile devices, in pixels 
+//TODO: Refactor these to use a 2d vector object
 let textBoxMobileX; // X loc of top-left corner of input text box on mobile devices, initialized in window resize functions because it's based on width
 let textBoxMobileY = activeRebusWidthMobile + 2 * activeRebusMobileY; // Y loc of top left corner of input text nox on mobile devices
 
-// animation / scroling variables
+//! animation / scroling variables
 let swiping = false;  // true if user is currently swiping their finger
 let currentlyScrolling = false; // true if rebus list is currently scrolling
 let scrollDistanceRemaining = 0;  // amount (px) more needed to be scroll, can be positive (down) or negative (up)
 let scrollRate = 0; // number of times scholling event (mouse wheel / touchpad swipe) is fired per 100ms
 let startingYAtTouchStart;  // startingY value when the use stared touching the screen
+//TODO: Refactor these to use a 2d vector object
 let touchStartedX; // x location of where current touch started, all relative to canvas
 let touchStartedY; // y lovation of where current touch started
+//TODO: Refactor these to use a 2d vector object
 let touchEndedX; // x location of where last touch ended
 let touchEndedY; // y location of where last touch ended
 let swipeVelocity = 0; // velocity in pixels / milisecond of current or last swipe
 let swipeVelocityRemaining = 0; // remaining velocity to prope swiping
 let pastTouches = []; // x & y location of all previous touches of current swipe
 
-
-// keep track of what type of device is being used
+//! keep track of what type of device is being used
 //  this way various functions can query this without using the media query and other checks used in the 'windowResized' function
 //  also, toggled by the 'windowResized' function
 let desktopMode = true;
 let mobileMode = false;
 
-// modes - objects, only one can be active at a time, and that determains what's durrently being drawn
+//! states - objects, only one can be active at a time, and that determains what's durrently being drawn
+//? Do i still even need this?
 let currentMode = 'rebusMode';
 
-// buttons (objects) used throughout program
+//! buttons (objects) used throughout program
 let closeButton;  //  button with x used to close things
 let yesButton;  // rectangular button that says 'yes', used in confirming 'clear data'
 let noButton;  // rectangular button that says 'no', sed in confirming 'clear data'
@@ -224,7 +228,7 @@ let scrollButtonUp; // fade-in scroll up arrow used in desktop mode
 let scrollButtonDown; // fade-in scroll down arrow used in desktop mode
 let scrollBar;  // scroll bar to incidate position, interactive on desktop mode
 
-// stat recording variables
+//! stat recording variables
 let numberOfCompletedRebuses = 0; // stores number of rebus puzzles that have been solved
 let numberOfCompletedRebusesWithoutHints = 0; // stores number of rebus puzzles solved before the user looked at that puzzle's hints
 let numberOfCompletedRebusesInCurrentCategory = 0; // stores number of rebus puzzles that have been solved in the current category
@@ -239,7 +243,7 @@ let rebusSolvingRate; // time it's taken user to solve each puzzle, on average
 let rebusRanks = []; // array containing all rebus ranks
 let hintsUsed = [];
 
-// DOM element variables, ordered from top to bottom
+//! DOM element variables, ordered from top to bottom
 // stored as p5.element objects so their CSS properties and events/inputs can be used in p5.js functions
 let navbar; // holds DOM navbar DIV elements
 let navbarHeightCurrent = 40; // stores current height of nav bar, updated based on size changes
@@ -334,7 +338,11 @@ function draw() {
         drawLoadingAnimation(); // draw the loading bar grphics
     }
     if (!loading) { // if all images have been loaded...
-        unitTest();
+        // runs all unit tests once, IF the run unit test bool is true/enabled
+        if (runUnitTests) {
+            unitTest();
+            runUnitTests = false;
+        }
         background(255);  // redraw white background (to cover up previous images)
         if (touches.length > 0) drag();  // moves rebuses based on finger draw, if finger is currently pressed
         drawRebuses();  // draws grid of rebuses
@@ -345,7 +353,6 @@ function draw() {
         if (swipeVelocityRemaining != 0)
             swipeAnimation();
     }
-    print('sv : ' + round(swipeVelocity) + ', svr: ' + round(swipeVelocityRemaining));
 }
 
 //#endregion DRAW LOOP
@@ -2909,11 +2916,14 @@ class Rebus {
     constructor(img, fileName, index) {
         this.index = index; // stores originally loaded index, useful once rebus order is randomized
         this.fileName = fileName; // for image, including extension
-        print(fileName);
-        this.name = (split(split(fileName, '/')[2], '.')[0]).substring(6); // removes extensions and 'rebus_' prefix from filename, keeps number
+        let splitFileName = split(fileName, '/'); // splits full path by folders (aka by backslasshes)
+        let rebusNameWithExtensionAndPrefix = splitFileName[splitFileName.length - 1]; // grabs just rebus name, which is the last portion of the file path
+        let rebusNameWithPrefix = split(rebusNameWithExtensionAndPrefix, '.')[0]; // removes file extension
+        this.name = rebusNameWithPrefix.substring(6); // remove '_rebus' prefix, saves just name (category) and number
         this.image = img; // .jpg
 
         // topleft corner of where the rebus will be drawn from
+        //TODO: Refactor this to use a 2d vector object instead of 2 variables
         this.xLoc = -240; // sets initial location off the canvas, so it can't accidentally be picked up by isHovered()
         this.yLoc = -240;
 
@@ -2954,6 +2964,22 @@ class Rebus {
         this.hint1 = rebusDataTable.getString(index, 'hint1');
         this.hint2 = rebusDataTable.getString(index, 'hint2');
     }
+
+    /**
+     * Extracts the name of this rebus from the given file name
+     * Example: fileName: "data/images/rebus_architecture_00.jpg" --> becomes "architecture_00"
+     * @param {string} fileName file name parat
+     * @returns {string} rebus name
+     */
+    getRebusNameFromFileName(fileName) {
+        let splitFileName = split(fileName, '/'); // splits full path by folders (aka by backslasshes)
+        let rebusNameWithExtensionAndPrefix = splitFileName[splitFileName.length - 1]; // grabs just rebus name, which is the last portion of the file path
+        let rebusNameWithPrefix = split(rebusNameWithExtensionAndPrefix, '.')[0]; // removes file extension
+        let name = rebusNameWithPrefix.substring(6); // remove '_rebus' prefix, saves just name (category) and number
+        return name;
+    }
+
+
 
     // draws this rebus to the screen
     drawRebus(x, y) {
@@ -3552,8 +3578,17 @@ class PastTouch {
 
 //#region UNIT TEST
 
+//TODO: Refactor the result summary - doesn't fit in alert box new idea - open new tab with unti test results? I like it!
+// Runs all unit tests within
 function unitTest() {
-    if (testRebusMethod() == 7) print('pass'); else print('fail');
+    print("No tests to run yet");
+    let testResults = "test Results: ";
+    for (let i = 0; i < 100; i++) {
+        testResults += "\n line " + i;
+    }
+    alert(testResults);
+
+    window.open('unitTestResults.html');
 }
 
 //#endregion UNIT TEST
