@@ -67,6 +67,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\jasmine\jasmine.css" />
+    <Content Include="Content\jasmine\jasmine_favicon.png" />
     <Content Include="CSS_rebusCity.css" />
     <Content Include="data\dropdownArrowBlack.png" />
     <Content Include="data\dropdownArrowGrey.png" />
@@ -412,6 +414,8 @@
     <Content Include="data\preloading.gif" />
     <Content Include="data\thinkOutsideTheBox.jpg" />
     <Content Include="index.html" />
+    <Content Include="testTest.js" />
+    <Content Include="karma.conf.js" />
     <Content Include="p5\lib\addons\p5.sound.js" />
     <Content Include="p5\lib\addons\p5.sound.min.js" />
     <Content Include="p5\lib\empty-example\index.html" />
@@ -421,6 +425,14 @@
     <Content Include="p5\lib\README.txt" />
     <Content Include="p5\__MACOSX\lib\empty-example\._index.html" />
     <Content Include="rebusCityLocal.js" />
+    <Content Include="Scripts\jasmine\boot.js" />
+    <Content Include="Scripts\jasmine\console.js" />
+    <Content Include="Scripts\jasmine\jasmine-html.js" />
+    <Content Include="Scripts\jasmine\jasmine.js" />
+    <Content Include="Scripts\rebusCityLocal.js" />
+    <Content Include="Scripts\rebusCityTests.js" />
+    <Content Include="Scripts\StringCalculator.js" />
+    <Content Include="Scripts\StringCalculatorTests.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -431,6 +443,7 @@
     <Content Include="data\rebusRanks.csv" />
     <Content Include="p5\lib\.DS_Store" />
     <Content Include="p5\__MACOSX\lib\._.DS_Store" />
+    <Content Include="package.json" />
     <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -438,6 +451,9 @@
     <None Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Specs\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
