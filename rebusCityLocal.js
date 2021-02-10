@@ -117,7 +117,7 @@
 //  -add 'filter out solved/unsolved' (gotta design it somehow)
 //  -first time visiting? show rebus examples (centered) first, maybe with a popup about hints and a way to skip past it?
 //  -way to share a rebus (send .jpg, and insta + website links?)
-//  -slighty animation when user is at top/bottom but tries to keep scrolling
+//  -slighty animation (rubberbanding) when user is at top/bottom but tries to keep scrolling
 //  -slight animation when user tries to scroll left/right but there's not more
 //  -mobile, have the last puzzle selected highlighted so you can see it after a user exits active rebus mode (maybe fades out?)
 //  -prevent autofill sugggestions in mobile browsers in input box
@@ -137,10 +137,10 @@
 //  -option to select, download, and share up to 9 at once - or 12 - creates a 8.5  x 11 (or a4) with their selected rebuses, and my logo
 //  -add copyright rebus city 2020 in footer (right in the middle?)
 //  -use list of categories instead of first/second/third, ect
-//  -add to github and share with greg
-//  -add js unit tests somehow
+//  X add to github and share with greg
+//  -*add js unit tests somehow
 //  -refactor all x/y objects to use a single 2d vector object instead of two different variables for x and y
-//  -Update all methods using intellisense comments for visual studios
+//  -*Update all methods using intellisense comments for visual studios
 
 // #endregion TODO
 
@@ -365,7 +365,7 @@ function draw() {
         // runs all unit tests once, IF the run unit test bool is true/enabled
         if (runUnitTests) {
             runUnitTests = false;
-            unitTest();
+            runAllUnitTests();
         }
         background(255);  // redraw white background (to cover up previous images)
         if (touches.length > 0) drag();  // moves rebuses based on finger draw, if finger is currently pressed
@@ -3602,11 +3602,8 @@ class PastTouch {
 
 //#region UNIT TEST
 
-//TODO: Refactor the result summary - doesn't fit in alert box new idea - open new tab with unti test results? I like it!
-// Runs all unit tests within
-
-
-function unitTest() {
+/** Holds and runs all unit tests within! */
+function runAllUnitTests() {
 
     let unitTests = new UnitTestExecutor();
 
@@ -3636,44 +3633,26 @@ function unitTest() {
         true
     );
 
-    //alert(testResults);
 
     newpage = window.open('unitTestResults.html');
     let str = unitTests.getFormattedTestResults();
-    newpage.document.write(str);
     //TODO: get this working better, not just with 'document.write' but actually add DOM elements to the body of the new test result page...
-    //let p = newpage.document.createElement("p");
-    //var text = newpage.document.createTextNode("This just got added");
-    //newpage.document.body.appendChild(p);
-
-
-    //var OpenWindow = window.open('unitTestResults.html');
-    //OpenWindow.onload = function () {
-    //    document.body.innerHTML('<p>testy p</p>');
-    //};
-
-    //$(OpenWindow.document.body).ready(function () {
-    //    $(OpenWindow.document.body).append('<p>hi</p>');
-    //    OpenWindow.document.body.innerHTML('<p>testy p</p>');
-    //});
-
-
-    print("hi");
-
-
+    newpage.document.write(str);
 }
 
+//TODO: Add exception handling!
+/** Class to execute unit tests, and record and display their results */
 class UnitTestExecutor {
     constructor() {
+        /** List to hold all unit test result objects 
+         @type {UnitTestResult} */
         this.testResults = [];
     }
 
-    addTestResult(testResult) {
-        this.testResults += "<p>" + testGroupName + "::" + testName + "::" + result + "</p>";
-    }
-
+    /** Reutns a html string (with tags) describing the test results of all run tests */
     getFormattedTestResults() {
         let formattedTestResults = "<h1>Unit Test Results</h1>";
+        formattedTestResults += this.getTestSummary();
         let previousTestGroupName;
         for (let testResult of this.testResults) {
             // starts new group header
@@ -3681,34 +3660,60 @@ class UnitTestExecutor {
                 formattedTestResults += "<h3>" + testResult.testGroupName + "</h3>";
             previousTestGroupName = testResult.testGroupName;
             // adds line for test result for that test
-            formattedTestResults += "<p>" + testResult.testName + "::" + testResult.getPassOrFailText() + "</p>";
+            if (!testResult.passed) {
+                formattedTestResults += '<p style = "color:red;font-weight:bold;">';
+            }
+            else {
+                formattedTestResults += '<p>';
+            }
+            formattedTestResults += testResult.testName + "::" + testResult.getPassOrFailText() + "</p>";
+            if (!testResult.passed) {
+                formattedTestResults += "<p>&emsp;Expected Result: " + testResult.expectedResult + "</p>"
+                formattedTestResults += "<p>&emsp;Actual Result: " + testResult.actualResult + "</p>"
+            }
         }
 
         return formattedTestResults;
     }
 
+    /** Returns an html <p> string representing how many tests were run and passed (example: '<p>9/10 tests passed</p>') */
+    getTestSummary() {
+        let numOfTestsRun = this.testResults.length;
+        let numOfTestsPassed = 0;
+        for (let testResult of this.testResults) {
+            if (testResult.passed)
+                numOfTestsPassed++;
+        }
+        return "<p>Total Tests Passed: " + numOfTestsPassed + "/" + numOfTestsRun + "</p>";
+    }
+
     /**
-     * Executes the given test method and records the results in the results list
-     * @param {string} testGroupName
-     * @param {string} testName
-     * @param {any} testMethod
-     * @param {any} expectedResult
+     * Executes the given test method and records the results
+     * @param {string} testGroupName name of group this unit test should belong to
+     * @param {string} testName name of the specific unit test, basically describing what it does and/or what method it's testing
+     * @param {any} testMethod actual function that will produce the actual result fromt the test
+     * @param {any} expectedResult expected result from the test method in the previous argument, will be compared to this with '==' operator.
      */
     executeTest(testGroupName, testName, testMethod, expectedResult) {
-        let actualResult = testMethod();
-        let passed = expectedResult == actualResult;
-        let testResult = new UnitTestResult(testGroupName, testName, passed);
-        this.testResults.push(testResult);
+        let actualResult = testMethod(); // run given test method
+        let passed = expectedResult == actualResult; // deteminer whether actual result matched the expected
+        // create a new unit test result object to store this test's results
+        let testResult = new UnitTestResult(testGroupName, testName, passed, expectedResult, actualResult);
+        this.testResults.push(testResult); // add this test result to this classes's list of test results
     }
 }
 
+/** Object representing the results from a single unit tests */
 class UnitTestResult {
-    constructor(testGroupName, testName, passed) {
+    constructor(testGroupName, testName, passed, expectedResult, actualResult) {
         this.testGroupName = testGroupName;
         this.testName = testName;
         this.passed = passed;
+        this.expectedResult = expectedResult;
+        this.actualResult = actualResult;
     }
 
+    /** Returns a string representation of the 'passed' boolean (Ex: "Passed!" or "Failed!") */
     getPassOrFailText() {
         return this.passed ? 'Passed!' : 'Failed';
     }
