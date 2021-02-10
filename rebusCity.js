@@ -144,7 +144,6 @@
 
 // #endregion TODO
 
-
 //#region GLOBAL VARIABLES
 
 //#region GLOBAL VARIABLES - DEBUG AND TESTING
@@ -153,12 +152,12 @@
 
 /** when true, unit tests will be run 
  @type {boolean} */
-let runUnitTests = true; //! Change to false before release!
+//let runUnitTests = true; //! Change to false before release!
+let runUnitTests = false; //! Change to true to test!
 
 //#endregion GLOBAL VARIABLES - DEBUG AND TESTING
 
 //#region GLOBAL VARIABLES - LOADING
-
 
 /** (p5.Table) holds imported csv data table as p5 table objects */
 let rebusDataTable;
@@ -185,13 +184,20 @@ let loadingCounter = 0; //
 
 //#endregion GLOBAL VARIABLES - LOADING
 
-//! rebus variables and constants
-let totalNumberOfRebuses; // stores total number of rebuse puzzles so i don't have to querying it every time it's needed
+//#region GLOBAL VARIABLES - REBUS DATA
+
+/** stores total number of rebuse puzzles, before the rebuses object array is created
+ * @type {number}*/
+let totalNumberOfRebuses;
+
 /**
  * Array of all rebus objects
  * @type {Rebus[]} of rebuses}
  * */
 let rebuses = []; // stores array of all rebus objects
+
+/** stores the list of currently filtered rebus indices
+ * @type {number[]} */
 let filteredRebusIndices = []; // stores the list of currently filtered rebus indices
 let aRebusIsCurrentlyActive = false; // true when a rebus is currently selected/active
 let activeRebusIndex; // stores index of currently active rebus
@@ -210,6 +216,9 @@ let activeRebusMobileY = 10; // X loc of top-left corner of active rebus image w
 let numOfRowsThatFitOnscreen;  // stores the number of full rebuses that fit on the current screen, recalculated every time window is resized
 let rowHeight; // height (in pixels) of a row of rebuses, included buffer space (rebusWidthCurrent + horizontalSpacingCurrent) - updated whenever screen size changes
 let numOfRows; // number of rows of rebuses in the current category (filteredRebuses.length / 3, rounded up) - updates when category is changed
+
+//#endregion GLOBAL VARIABLES - REBUS DATA
+
 
 //! other object position variables
 let textBoxHeightMobile = 40; // height of text box on mobile devices, in pixels 
@@ -287,6 +296,7 @@ let footer; // holds DOM footer element
 const footerHeight = 20;  // height of DOM footer element
 let totalScoreP; // <p> dispalying current  number of rebuses solved
 let categoryScoreP; // <p> displaying current number of rebuses for current category solved
+let copyrightP; // <p> containing current copyright year
 
 //#endregion GLOBAL VARIABLES
 
@@ -299,7 +309,7 @@ let categoryScoreP; // <p> displaying current number of rebuses for current cate
 
 // runs before setup, doesn't move on until everything in preload has loaded
 function preload() {
-    // loads rebus data table .csv file from google drive into p5.table object
+    // loads rebus data table .csv file into p5.table object
     rebusDataTable = loadTable(csvPath, 'csv', 'header');
     // loading image, must preload so it can be displayed while everything else loads
     loadingImage = loadImage('data/thinkOutsideTheBox.jpg');
@@ -339,6 +349,7 @@ function setup() {
     createContainer();
     createTotalScoreP();
     createCategoryScoreP();
+    createCopyrightP();
     createHintButtons();
     createHintText();
     createScrollButtons();
@@ -1107,6 +1118,12 @@ function createCategoryScoreP() {
     categoryScoreP.id('categoryScore');
 }
 
+function createCopyrightP() {
+    copyrightP = createP('&copy; 2020 RebusCity');
+    copyrightP.parent('footer');
+    copyrightP.id('copyright');
+}
+
 // creats the small round buttons that the user clicks on to show hints
 function createHintButtons() {
     hintButton = new ButtonRound();
@@ -1313,7 +1330,7 @@ function drawStatsScreen() {
     textAlign(LEFT);
     text('Total Rebuses Solved:', buffer, nextLineY);
     if (mobileMode) { textAlign(RIGHT); }
-    text(numberOfCompletedRebuses + ' (' + round(((numberOfCompletedRebuses / totalNumberOfRebuses) * 100), 1) + '%)', secondColumn, nextLineY);
+    text(numberOfCompletedRebuses + ' (' + round(((numberOfCompletedRebuses / rebuses.length) * 100), 1) + '%)', secondColumn, nextLineY);
     nextLineY += newLineSpacing;
     textAlign(LEFT);
     text('Strongest Category:', buffer, nextLineY);
@@ -1996,24 +2013,33 @@ function resizeTextInputBox(screenSize) {
 
 //resizes score (at bottom) based on screen size
 function resizeScore(screenSize) {
+    // fuck CSS. 'm not quite sure how this works, but it does!
     if (screenSize === 'desktop') {
         categoryScoreP.style('width', width + 'px');
         totalScoreP.style('width', width + 'px');
+        copyrightP.style('width', width + 'px');
         categoryScoreP.style('left', (((windowWidth - width) / 2) - ((width / 3) * 0.13)) + 'px'); // doesn't have padding, uses margin for right offset instead
         totalScoreP.style('left', ((windowWidth - width) / 2) + 'px');
+        copyrightP.style('left', (((windowWidth - width) / 2) - ((width / 3) * 0.13)) + 'px'); // doesn't have padding, uses margin for right offset instead
         categoryScoreP.style('right', '');
         totalScoreP.style('padding-left', ((width / 3) * 0.13) + 'px');
+        copyrightP.style('padding-left', ((width / 3) * 0.13) + 'px');
         categoryScoreP.style('position', 'absolute');
         totalScoreP.style('position', 'absolute');
+        copyrightP.style('position', 'absolute');
     } else {
         categoryScoreP.style('width', '90%');
         totalScoreP.style('width', '90%');
+        copyrightP.style('width', '90%');
         categoryScoreP.style('left', '');
         totalScoreP.style('left', '5%');
+        copyrightP.style('left', '5%');
         categoryScoreP.style('right', '5%');
         totalScoreP.style('padding-left', '');
+        copyrightP.style('padding-left', '');
         categoryScoreP.style('position', 'absolute');
         totalScoreP.style('position', 'absolute');
+        copyrightP.style('position', 'absolute');
     }
 }
 
@@ -2643,7 +2669,7 @@ function calcCorrectGuessPercentage() {
 // retrns user's current rebus ranking
 function calcRebusRank() {
     let index = numberOfCompletedRebuses;
-    index = map(index, 0, totalNumberOfRebuses, 0, rebusRanks.length - 1);
+    index = map(index, 0, rebuses.length, 0, rebusRanks.length - 1);
     index = floor(index);
     return rebusRanks[index];
 }

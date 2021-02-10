@@ -420,7 +420,7 @@
     <Content Include="p5\lib\p5.min.js" />
     <Content Include="p5\lib\README.txt" />
     <Content Include="p5\__MACOSX\lib\empty-example\._index.html" />
-    <Content Include="rebusCityLocal.js" />
+    <Content Include="rebusCity.js" />
     <Content Include="unitTestResults.html" />
     <Content Include="Web.config" />
   </ItemGroup>
