@@ -38,6 +38,10 @@
 //TODO: Move this all to a seperate word or log file, I think
 // RECENTLY ADDED FEATURES ////////////////////
 //
+//  X-add js unit tests somehow
+//  X add to github and share with greg
+//  X-add copyright rebus city 2020 in footer (right in the middle?)
+//
 //  1.0.5 5/27/20
 //
 //  XX-Added Hints
@@ -135,10 +139,7 @@
 //  -make close button respond to window size change responsivley (add to resizeWindowResponsivley)
 //  -scroll bar (or other scroll indication?)
 //  -option to select, download, and share up to 9 at once - or 12 - creates a 8.5  x 11 (or a4) with their selected rebuses, and my logo
-//  -add copyright rebus city 2020 in footer (right in the middle?)
 //  -use list of categories instead of first/second/third, ect
-//  X add to github and share with greg
-//  -*add js unit tests somehow
 //  -refactor all x/y objects to use a single 2d vector object instead of two different variables for x and y
 //  -*Update all methods using intellisense comments for visual studios
 
