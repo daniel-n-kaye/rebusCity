@@ -25,6 +25,7 @@
 //  privdes hints, and other random statistics.
 //  
 // My Coding Style Guide:
+//  TODO: Update to use new Visual Studios standards
 //  comments after OR above the line they're about
 //  no code longer than 80 charecters ('cept paths & comments)
 //  no empty lines within a function
@@ -34,10 +35,7 @@
 //#endregion ABOUT
 
 //#region TODO
-
-////////////////////////////////////////////////////////////////////////////////
-// TODO ////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+//TODO: Move this all to a seperate word or log file, I think
 // RECENTLY ADDED FEATURES ////////////////////
 //
 //  1.0.5 5/27/20
@@ -146,27 +144,53 @@
 
 // #endregion TODO
 
+
 //#region GLOBAL VARIABLES
 
-////////////////////////////////////////////////////////////////////////////////
-// Global Variables ////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+//#region GLOBAL VARIABLES - DEBUG AND TESTING
 
-//! DEBUG & Testing variables
+//? Is there a way to do #IF DEBUG, like in C#? I haven't found one yet.
+
+/** when true, unit tests will be run 
+ @type {boolean} */
 let runUnitTests = true; //! Change to false before release!
 
-//! for loading
-let rebusDataTable; // holds imported csv data table as p5 table objects
-// path to google sheet that has published .csv file of rebus data table info
+//#endregion GLOBAL VARIABLES - DEBUG AND TESTING
+
+//#region GLOBAL VARIABLES - LOADING
+
+
+/** (p5.Table) holds imported csv data table as p5 table objects */
+let rebusDataTable;
+
+/** internal path to .csv file of rebus data table info
+ @type {string} */
 const csvPath = 'data/rebusCityDataTable.csv';
-// path to google sheet that has published .csv file of rebus rank names
+
+/** internal path to .csv file of rebus tank names
+ @type {string} */
 const rebusRankCsvPath = 'data/rebusRanks.csv';
-let loadingImage; // image to display while loading
+
+/** (p5.Image) image to display while loading */
+let loadingImage;
+
+/** true while rebus images and data tables are still loading 
+ @type {boolean} */
 let loading = true; // set to false once all rebus images have loaded
-let loadingCounter = 0; // keeps count of number of images that have finished loading, used in loading bar animaion
+
+/** counter to keep track of number of rebus images that have finished loading.
+ * Used to calculate loading bar animaion 
+ * @type {int} */
+let loadingCounter = 0; // 
+
+//#endregion GLOBAL VARIABLES - LOADING
 
 //! rebus variables and constants
 let totalNumberOfRebuses; // stores total number of rebuse puzzles so i don't have to querying it every time it's needed
+/**
+ * Array of all rebus objects
+ * @type {Rebus[]} of rebuses}
+ * */
 let rebuses = []; // stores array of all rebus objects
 let filteredRebusIndices = []; // stores the list of currently filtered rebus indices
 let aRebusIsCurrentlyActive = false; // true when a rebus is currently selected/active
@@ -340,8 +364,8 @@ function draw() {
     if (!loading) { // if all images have been loaded...
         // runs all unit tests once, IF the run unit test bool is true/enabled
         if (runUnitTests) {
-            unitTest();
             runUnitTests = false;
+            unitTest();
         }
         background(255);  // redraw white background (to cover up previous images)
         if (touches.length > 0) drag();  // moves rebuses based on finger draw, if finger is currently pressed
@@ -3580,15 +3604,114 @@ class PastTouch {
 
 //TODO: Refactor the result summary - doesn't fit in alert box new idea - open new tab with unti test results? I like it!
 // Runs all unit tests within
-function unitTest() {
-    print("No tests to run yet");
-    let testResults = "test Results: ";
-    for (let i = 0; i < 100; i++) {
-        testResults += "\n line " + i;
-    }
-    alert(testResults);
 
-    window.open('unitTestResults.html');
+
+function unitTest() {
+
+    let unitTests = new UnitTestExecutor();
+
+    // test 1
+    unitTests.executeTest(
+        'Test Group 1',
+        'Did at least one Rebus load?',
+        function () {
+            return rebuses.length > 0 ? 'yes' : 'no';
+        },
+        'yes'
+    );
+
+    // test 2 attempt
+    unitTests.executeTest(
+        'Test Group 1',
+        'test 2',
+        function () { return true; },
+        true
+    );
+
+    // test 3
+    unitTests.executeTest(
+        'Test Group 2',
+        'expected to fail',
+        function () { return false; },
+        true
+    );
+
+    //alert(testResults);
+
+    newpage = window.open('unitTestResults.html');
+    let str = unitTests.getFormattedTestResults();
+    newpage.document.write(str);
+    //TODO: get this working better, not just with 'document.write' but actually add DOM elements to the body of the new test result page...
+    //let p = newpage.document.createElement("p");
+    //var text = newpage.document.createTextNode("This just got added");
+    //newpage.document.body.appendChild(p);
+
+
+    //var OpenWindow = window.open('unitTestResults.html');
+    //OpenWindow.onload = function () {
+    //    document.body.innerHTML('<p>testy p</p>');
+    //};
+
+    //$(OpenWindow.document.body).ready(function () {
+    //    $(OpenWindow.document.body).append('<p>hi</p>');
+    //    OpenWindow.document.body.innerHTML('<p>testy p</p>');
+    //});
+
+
+    print("hi");
+
+
+}
+
+class UnitTestExecutor {
+    constructor() {
+        this.testResults = [];
+    }
+
+    addTestResult(testResult) {
+        this.testResults += "<p>" + testGroupName + "::" + testName + "::" + result + "</p>";
+    }
+
+    getFormattedTestResults() {
+        let formattedTestResults = "<h1>Unit Test Results</h1>";
+        let previousTestGroupName;
+        for (let testResult of this.testResults) {
+            // starts new group header
+            if (testResult.testGroupName != previousTestGroupName)
+                formattedTestResults += "<h3>" + testResult.testGroupName + "</h3>";
+            previousTestGroupName = testResult.testGroupName;
+            // adds line for test result for that test
+            formattedTestResults += "<p>" + testResult.testName + "::" + testResult.getPassOrFailText() + "</p>";
+        }
+
+        return formattedTestResults;
+    }
+
+    /**
+     * Executes the given test method and records the results in the results list
+     * @param {string} testGroupName
+     * @param {string} testName
+     * @param {any} testMethod
+     * @param {any} expectedResult
+     */
+    executeTest(testGroupName, testName, testMethod, expectedResult) {
+        let actualResult = testMethod();
+        let passed = expectedResult == actualResult;
+        let testResult = new UnitTestResult(testGroupName, testName, passed);
+        this.testResults.push(testResult);
+    }
+}
+
+class UnitTestResult {
+    constructor(testGroupName, testName, passed) {
+        this.testGroupName = testGroupName;
+        this.testName = testName;
+        this.passed = passed;
+    }
+
+    getPassOrFailText() {
+        return this.passed ? 'Passed!' : 'Failed';
+    }
 }
 
 //#endregion UNIT TEST
