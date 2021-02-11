@@ -145,6 +145,7 @@
 //  -fix 'X' location button for active rebus in mobile - doesn't adapt when i flex browser screen size!
 //  -fix 'x' button for all about/hint/contact windows = use two lines instead of an 'x' charecter, becaues often it's not centered, and the font could change!
 //  -namespace all p5 variables
+//  -Convert lost of simple x/y postion vectors to my own 2dposition class! (then they'll show up in intellisense, and if i dont' need all the extra data/properties taht come with a p5.vector object, why use em? I can easily switch it out anytime to, just by changing the point where it's constructed, as long as i keep the .x and .y syntax the same!)
 
 // #endregion TODO
 
