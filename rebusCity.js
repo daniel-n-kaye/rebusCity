@@ -41,6 +41,7 @@
 //  X-add js unit tests somehow
 //  X add to github and share with greg
 //  X-add copyright rebus city 2020 in footer (right in the middle?)
+//  X-add warning for IE users before trying to load page ('IE doesn't support ES6)
 //
 //  1.0.5 5/27/20
 //
@@ -94,7 +95,6 @@
 //
 //  -mobile l/r buttons as opposed to swiping
 //  -mobile l/r swiping animation
-//  -add warning for IE users before trying to load page ('IE doesn't support ES6)
 //  -make rebuses 'breath' when mouse is hovering over them
 //  -save previous category and active rebus name
 //  
