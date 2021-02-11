@@ -412,6 +412,7 @@
     <Content Include="data\preloading.gif" />
     <Content Include="data\thinkOutsideTheBox.jpg" />
     <Content Include="index.html" />
+    <Content Include="detectInternetExplorer.js" />
     <Content Include="p5\lib\addons\p5.sound.js" />
     <Content Include="p5\lib\addons\p5.sound.min.js" />
     <Content Include="p5\lib\empty-example\index.html" />
