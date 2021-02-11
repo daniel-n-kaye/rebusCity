@@ -276,13 +276,18 @@ let numOfRows;
 
 //#endregion GLOBAL VARIABLES - REBUS DATA
 
+//#region GLOBAL VARIABLES - INPUT TEXT BOX PROPERTIES
 
-//! other object position variables
-let textBoxHeightMobile = 40; // height of text box on mobile devices, in pixels 
-//TODO: Refactor these to use a 2d vector object
-let textBoxMobileX; // X loc of top-left corner of input text box on mobile devices, initialized in window resize functions because it's based on width
-//let textBoxMobileY = activeRebusSizeMobile + 2 * activeRebusMobileY; // Y loc of top left corner of input text nox on mobile devices
-let textBoxMobileY; // Y loc of top left corner of input text nox on mobile devices
+/** height of text box on mobile devices (px)
+ * @type {number} */
+const textBoxHeightMobile = 40;
+
+/** Location (px) of top-left corner of input text box on mobile devices.
+ * Initialized in window resize functions because it's based on screen width
+ * (type: p5.Vector) */
+let textBoxPositionMobile;
+
+//#endregion GLOBAL VARIABLES - INPUT TEXT BOX PROPERTIES
 
 //! animation / scroling variables
 let swiping = false;  // true if user is currently swiping their finger
@@ -396,6 +401,7 @@ function setup() {
     // initializes Canvas of correct size (based on screen size), and ties DOM object to p5 variable
     initializeCanvas();
     initializeActiveRebusMobilePosition();
+    initializeTextBoxMobilePosition();
     // creates all DOM elements and assigns them to p5. variables
     //TODO: group these all in one method
     createRanks();  // creates array of rebus ranks (for stats page) from table
@@ -1088,6 +1094,14 @@ function initializeActiveRebusMobilePosition() {
     activeRebusPositionMobile = createVector(0, 10); // x value doesn't matter, it will be set in the 'resize' funtion(s)
 }
 
+/** Initializes the position vector that controls the location
+ * of the input text box when in mobile mode.
+ * Needs to be initialized early because it is used to calculate
+ * the size/position of a number of other elements during setup() */
+function initializeTextBoxMobilePosition() {
+     // just need to initialize the vector object, it's values will be set based on the screen size in the 'screen resized' functions
+    textBoxPositionMobile = createVector(0, 0);
+}
 
 // creates navbar DIV
 function createNavbar() {
@@ -1242,15 +1256,13 @@ function touchedOutsideActiveRebus() {
     let bool = false;
     // A series of conditions define if the tap/click was in a blank space outside the active rebus
     // if touch below the nav bar, and above the bottom of the active rebus image....
-    if (mouseY > 0 && mouseY < textBoxMobileY) {
+    if (mouseY > 0 && mouseY < textBoxPositionMobile.y) {
         // if touch was between the left edge of the canvas and the left edge of the rebus
-        //if (mouseX < (activeRebusMobileX)) {
         if (mouseX < (activeRebusPositionMobile.x)) {
             print('p1');
             bool = true;
         } else
             // if touch was between the right edge of the rebus and the right edge of the canvas...
-            //if (mouseX > (activeRebusMobileX + activeRebusSizeMobile) &&
             if (mouseX > (activeRebusPositionMobile.x + activeRebusSizeMobile) &&
                 // and none of the buttons were touched....
                 !closeButton.isHovered() && !hintButton.isHovered() && !h1Button.isHovered() && !h2Button.isHovered()) {
@@ -1259,12 +1271,16 @@ function touchedOutsideActiveRebus() {
             }
     } else
         // if touch was to the left or right side of the text box...
-        if ((mouseX < textBoxMobileX || mouseX > width - textBoxMobileX) && mouseY > textBoxMobileY && mouseY < textBoxMobileY + textBoxHeightMobile) {
+        if (
+            (mouseX < textBoxPositionMobile.x || mouseX > width - textBoxPositionMobile.x) &&
+            mouseY > textBoxPositionMobile.y &&
+            mouseY < textBoxPositionMobile.y + textBoxHeightMobile)
+        {
             print('p3');
             bool = true;
         } else
             // if youch was between the bottom of the text box and the bottom of the canvas (AKA above the keyboard, if active)
-            if (mouseY > textBoxMobileY + textBoxHeightMobile && textBoxHeightMobile && mouseY < height) {
+            if (mouseY > textBoxPositionMobile.y + textBoxHeightMobile && textBoxHeightMobile && mouseY < height) {
                 print('p4');
                 bool = true;
             }
@@ -1316,7 +1332,7 @@ function drawTextInputBox(x, y) {
         textInputBox.position(x + 20, y + rebusSizeCurrent + 3, 'relative'); // moves textbox under active rebus
     }
     if (mobileMode) {
-        textInputBox.position(textBoxMobileX, textBoxMobileY, 'relative');  // positions text box centered under mobile large drawing of active rebus
+        textInputBox.position(textBoxPositionMobile.x, textBoxPositionMobile.y, 'relative');  // positions text box centered under mobile large drawing of active rebus
     }
 }
 
@@ -1327,19 +1343,16 @@ function drawActiveRebus() {
     fill(0, 200);
     rect(0, 0, width, height);
     //draws selected rebus larger and centered
-    //image(rebuses[activeRebusIndex].image, activeRebusMobileX, activeRebusMobileY,
     image(rebuses[activeRebusIndex].image, activeRebusPositionMobile.x, activeRebusPositionMobile.y,
         activeRebusSizeMobile, activeRebusSizeMobile);
     // test code to work on swiping animation on mobile
     //   if(touches.length > 0){
-    //     activeRebusMobileX += 1;
     //     activeRebusPositionMobile.x += 1;
     //   }
     // draws red rectangle if a recently incorrect answer was entered (on mobile)
     if (rebuses[activeRebusIndex].incorrectAnimationTimer > 0) {
         noStroke();
         fill(255, 0, 0, rebuses[activeRebusIndex].incorrectAnimationTimer)
-        //rect(activeRebusMobileX - 1, activeRebusMobileY - 1, activeRebusSizeMobile, activeRebusSizeMobile, 5);
         rect(activeRebusPositionMobile.x - 1, activeRebusPositionMobile.y - 1, activeRebusSizeMobile, activeRebusSizeMobile, 5);
         rebuses[activeRebusIndex].incorrectAnimationTimer -= 2;
     }
@@ -1347,7 +1360,6 @@ function drawActiveRebus() {
     if (rebuses[activeRebusIndex].showHints) {
         noStroke();
         fill(255, 255 * 0.9);
-        //rect(activeRebusMobileX - 1, activeRebusMobileY - 1, activeRebusSizeMobile, activeRebusSizeMobile, 5);
         rect(activeRebusPositionMobile.x - 1, activeRebusPositionMobile.y - 1, activeRebusSizeMobile, activeRebusSizeMobile, 5);
     }
     // draws outline rectangle over selected rebus
@@ -1355,7 +1367,6 @@ function drawActiveRebus() {
     noFill();
     strokeWeight(3);
     rect(activeRebusPositionMobile.x - 1, activeRebusPositionMobile.y - 1,
-        //rect(activeRebusMobileX - 1, activeRebusMobileY - 1,
         activeRebusSizeMobile + 2, activeRebusSizeMobile + 2, 5); // the '-1s' and '+2s' make the outline rectangle a tiny bit larger than the image, in order for the border radius to cover up the image's hard 90 corners
     closeButton.draw(); // draws 'X' button to close out of actuve rebus mode
     if (!rebuses[activeRebusIndex].showHints)
@@ -1372,7 +1383,6 @@ function drawActiveRebus() {
         textAlign(CENTER);
         textSize(18);
         let hintTextXLoc = width / 2; // center horizontally
-        //let hintTextYLoc = activeRebusMobileY + (activeRebusSizeMobile * 0.1); // near top of large rebus
         let hintTextYLoc = activeRebusPositionMobile.y + (activeRebusSizeMobile * 0.1); // near top of large rebus
         text(`hints: ${rebuses[activeRebusIndex].numOfHintsUsed()} / ${rebuses[activeRebusIndex].numOfHints}`, hintTextXLoc, hintTextYLoc);
     }
@@ -2131,7 +2141,6 @@ function resizeHintText(screenSize) {
         hintText.style('color', 'black');
         hintText.style('font-size', 'large');
         hintText.position(activeRebusPositionMobile.x + (0.15 * activeRebusSizeMobile), activeRebusPositionMobile.y, 'relative');
-        //hintText.position(activeRebusMobileX + (0.15 * activeRebusSizeMobile), activeRebusMobileY, 'relative');
     }
 }
 
@@ -2151,11 +2160,9 @@ function resizeButtons(screenSize) {
 function resizeActiveRebusMobileVariables() {
     // actually resize mobile values...
     activeRebusSizeMobile = rebusSizeCurrent * 2; // makes active rebus on mobile twice as big as normal rebus, aka 2/3 the screen size
-    //activeRebusMobileX = width / 2 - activeRebusSizeMobile / 2; // horizontally centers active rebus image
     activeRebusPositionMobile.x = width / 2 - activeRebusSizeMobile / 2; // horizontally centers active rebus image
-    //textBoxMobileY = activeRebusSizeMobile + 2 * activeRebusMobileY; // height of active rebus plus a butter on top and on bottom
-    textBoxMobileY = activeRebusSizeMobile + 2 * activeRebusPositionMobile.y; // height of active rebus plus a butter on top and on bottom
-    textBoxMobileX = floor(width * 0.1); // text box is set to 80% in css, so this centers it horizontally
+    textBoxPositionMobile.y = activeRebusSizeMobile + 2 * activeRebusPositionMobile.y; // height of active rebus plus a butter on top and on bottom
+    textBoxPositionMobile.x = floor(width * 0.1); // text box is set to 80% in css, so this centers it horizontally
 }
 
 // // cool function i found that performs an action when a phone rotates between landscape and portrate mode. couldn't get it to reset the browser zoom though...
