@@ -144,6 +144,7 @@
 //  -*Update all methods using intellisense comments for visual studios
 //  -fix 'X' location button for active rebus in mobile - doesn't adapt when i flex browser screen size!
 //  -fix 'x' button for all about/hint/contact windows = use two lines instead of an 'x' charecter, becaues often it's not centered, and the font could change!
+//  -namespace all p5 variables
 
 // #endregion TODO
 
@@ -289,21 +290,52 @@ let textBoxPositionMobile;
 
 //#endregion GLOBAL VARIABLES - INPUT TEXT BOX PROPERTIES
 
-//! animation / scroling variables
-let swiping = false;  // true if user is currently swiping their finger
-let currentlyScrolling = false; // true if rebus list is currently scrolling
-let scrollDistanceRemaining = 0;  // amount (px) more needed to be scroll, can be positive (down) or negative (up)
-let scrollRate = 0; // number of times scholling event (mouse wheel / touchpad swipe) is fired per 100ms
-let startingYAtTouchStart;  // startingY value when the use stared touching the screen
-//TODO: Refactor these to use a 2d vector object
-let touchStartedX; // x location of where current touch started, all relative to canvas
-let touchStartedY; // y lovation of where current touch started
-//TODO: Refactor these to use a 2d vector object
-let touchEndedX; // x location of where last touch ended
-let touchEndedY; // y location of where last touch ended
-let swipeVelocity = 0; // velocity in pixels / milisecond of current or last swipe
+//#region GLOBAL VARIABLES - ANIMATION AND SCROLLING
+
+/** true if user is currently swiping their finger
+ * @type {boolean} */
+let isUserCurrentlySwiping = false;
+
+/** true if rebus list is currently scrolling
+ * @type {boolean} */
+let areRebusesCurrentlyScrolling = false;
+
+/** Amount (px) more needed to be scrolled.
+ * Can be positive (down) or negative (up)
+ * @type {number} */
+let scrollDistanceRemaining = 0; 
+
+//? how exactly is this used?
+/** number of times the native scrolling event (mouse wheel / touchpad swipe) is fired per 100ms.
+ * Note: Originally, I was using the 'value' of the scroll event, but it is incredible inconsistent between browsers,
+ * so I found using the number of times the even is fired to me more effective in capturing the scroll rate (I think?)
+ * @type {number} */
+let scrollRate = 0;
+
+/** Value of the startingY global variable at the moment when the use stared touching the screen
+ * @type {number} */
+let startingYValueWhenTouchStarted;
+
+/** x,y position at which the current touch/swipe started
+ * (type: p5.Vector) */
+let touchStartedPosition;
+
+/** x,y position at which the current touch/swipe ended
+ * (type: p5.Vector) */
+let touchEndedPosition;
+
+/** velocity in pixels / milisecond of current or last swipe
+ * @type {number} */
+let swipeVelocity = 0;
+
 let swipeVelocityRemaining = 0; // remaining velocity to prope swiping
-let pastTouches = []; // x & y location of all previous touches of current swipe
+
+/** array of all past touches of current swipe
+ * @type {PastTouch[]} */
+let pastTouches = [];
+
+//#endregion GLOBAL VARIABLES - ANIMATION AND SCROLLING
+
 
 //! keep track of what type of device is being used
 //  this way various functions can query this without using the media query and other checks used in the 'windowResized' function
@@ -313,6 +345,7 @@ let mobileMode = false;
 
 //! states - objects, only one can be active at a time, and that determains what's durrently being drawn
 //? Do i still even need this?
+//TODO:Refactor to be a sude javasript 'enum'
 let currentMode = 'rebusMode';
 
 //! buttons (objects) used throughout program
@@ -502,8 +535,8 @@ function mouseReleased() {
         return;
     }
     // prevents clicking on a rebus is user currently is swiping
-    if (swiping) {
-        swiping = false;
+    if (isUserCurrentlySwiping) {
+        isUserCurrentlySwiping = false;
         print("user is swiping, can't click now");
         return;
     }
@@ -758,23 +791,23 @@ function touchStarted() {
     print('touch started!!!');
     swipeVelocity = 0;
     swipeVelocityRemaining = 0;
-    touchStartedX = mouseX;
-    touchStartedY = mouseY;
-    startingYAtTouchStart = startingY;  // saves startingY
+    touchStartedPosition.x = mouseX;
+    touchStartedPosition.y = mouseY;
+    startingYValueWhenTouchStarted = startingY;  // saves startingY
     pastTouches = []; // clears previous sqipe from array
     pastTouches[0] = new PastTouch(mouseX, mouseY);
-    //   print('touchDownX: ' + touchStartedX + ', touchStartedY: ' + touchStartedY);
+    //   print('touchDownX: ' + touchStartedPosition.x + ', touchStartedY: ' + touchStartedPosition.y);
 }
 
 function touchMoved() {
-    print('touch moved!!!');
+    //print('touch moved!!!');
     // if user is touching with a finger (aka the left mouse button isn't pressed down)...
     //   if(mouseButton != 'left'){ //  note: the browsers I tested register a left mouseclick as lowercase string 'left'
     //     swiping = true; // prevents something from being clicked on while user is in the middle of swiping their finger
     //     print('swiping!');
     pastTouches.push(new PastTouch(mouseX, mouseY));  // records every movement of the touch/swipe to the array of past touches
     swipeVelocity = calcVelocity(); // every time the touch moves, it recalculates the velocity useing the past 10(?) frames
-    print('swipeVelocity: ' + swipeVelocity)
+    //print('swipeVelocity: ' + swipeVelocity)
     //   }
 }
 
@@ -785,8 +818,7 @@ function touchEnded() {
         mouseReleased();
     }
     //   swiping = false;  // swipe finished
-    touchEndedX = mouseX;
-    touchEndedY = mouseY;
+    touchEndedPosition = createVector(mouseX, mouseY);
     if (abs(swipeVelocity) > 30) {
         print('runing');
         swipeVelocityRemaining = swipeVelocity;
@@ -864,10 +896,10 @@ document.addEventListener('DOMMouseScroll', DoSomething);
 // runs once anytime a mouse wheel event is detected (anytime user scrolls mouse wheel or slides two fingers on a laptop touchpad, ect)
 function mouseWheel(event) {
     //   print(event.delta);  //prints scroll wheel value;
-    if (event.delta > 0 && !currentlyScrolling) {
+    if (event.delta > 0 && !areRebusesCurrentlyScrolling) {
         scrollDown();
     } else
-        if (event.delta < 0 && !currentlyScrolling) {
+        if (event.delta < 0 && !areRebusesCurrentlyScrolling) {
             scrollUp();
         }
     return false;
@@ -1299,7 +1331,7 @@ function touchedOutsideActiveRebus() {
 function drawRebuses() {
     filterRebuses();  // filters the rebuses each time before drawing them (is it necea=sary? idk) maybe later i can filter just when category is changed
     // animates scrolling up or down, if a scroll was recently called
-    if (currentlyScrolling) {  // if the scroll timer is above 0...
+    if (areRebusesCurrentlyScrolling) {  // if the scroll timer is above 0...
         scrollAnimation();  // execute the scroll animation
     }
     let x = 0;  // x position to draw first rebus
@@ -2213,7 +2245,7 @@ function scrollDown() {
             scrollDistanceRemaining += rowHeight;
         }
         //  adjusts global variable to tell drawRebuses to call the scrollAnimation function while it's drawing all the rebuses
-        currentlyScrolling = true;
+        areRebusesCurrentlyScrolling = true;
         deactivateAllRebuses(); // prevents text box from getting 'caught' at the bottom or top of the page while scrolling
         scrollButtonDown.opacityTimer = (255 * 0.75); // makes down arrow flash on the screen
     } else {  // if there aren't more rebuses below...
@@ -2240,7 +2272,7 @@ function scrollUp() {
             scrollDistanceRemaining -= rowHeight;
         }
         //  adjusts global variable to tell drawRebuses to call the scrollAnimation function while it's drawing all the rebuses
-        currentlyScrolling = true;
+        areRebusesCurrentlyScrolling = true;
         deactivateAllRebuses(); // prevents text box from getting 'caught' at the bottom or top of the page while scrolling
         scrollButtonUp.opacityTimer = (255 * 0.75); // makes down arrow flahs on the screen
     } else {  // if there aren't more rebuses below...
@@ -2354,7 +2386,7 @@ function scrollAnimation() {
         }
     // if scrolling is finished, rounds startingY to closest row value, and sets global scrolling variable to false
     if (scrollDistanceRemaining == 0) {
-        currentlyScrolling = false;
+        areRebusesCurrentlyScrolling = false;
         // rounds startingY to closest exact row
         let remainder = abs(startingY % rowHeight); //either0.1 or 239.9
         if (remainder < rowHeight / 2) {
@@ -2374,7 +2406,7 @@ function scrollAnimation() {
 function settle() {
     //   print('running settle');
     let remainder = abs(startingY % rowHeight); // pixels left to scroll to reach an even interval
-    if (remainder > 0) currentlyScrolling = true;
+    if (remainder > 0) areRebusesCurrentlyScrolling = true;
     // if closest even row is up....
     if (remainder < rowHeight / 2) {
         // scroll up to next even row
@@ -2390,10 +2422,11 @@ function settle() {
 function drag() {
     if (touches.length > 0) {
         //     print(touches);
-        let delta = touchStartedY - touches[0].y;
+        //let delta = touchStartedY - touches[0].y;
+        let delta = touchStartedPosition.y - touches[0].y;
         let limitTop = 0;
         let limitBottom = -1 * ((numOfRows - 1) * rowHeight);
-        startingY = startingYAtTouchStart - delta;
+        startingY = startingYValueWhenTouchStarted - delta;
         if (startingY > limitTop) startingY = limitTop;
         if (startingY < limitBottom) startingY = limitBottom;
     }
@@ -3613,12 +3646,12 @@ class ScrollBar {
     draw() {
         //     print(this.x + ', ' + this.p);
         // increases opacity while rebuses are scrollling
-        if (currentlyScrolling && this.opacity <= 255) {
+        if (areRebusesCurrentlyScrolling && this.opacity <= 255) {
             this.opacity += 8;
             this.opacityTimeout = 0;
         } else
             // decreses opacity after scrolling is finished, with a slight delay
-            if (!currentlyScrolling && this.opacity > 0) {
+            if (!areRebusesCurrentlyScrolling && this.opacity > 0) {
                 if (this.opacityTimeout < 30) {
                     this.opacityTimeout++;
                 } else {
