@@ -146,6 +146,7 @@
 //  -fix 'x' button for all about/hint/contact windows = use two lines instead of an 'x' charecter, becaues often it's not centered, and the font could change!
 //  -namespace all p5 variables
 //  -Convert lost of simple x/y postion vectors to my own 2dposition class! (then they'll show up in intellisense, and if i dont' need all the extra data/properties taht come with a p5.vector object, why use em? I can easily switch it out anytime to, just by changing the point where it's constructed, as long as i keep the .x and .y syntax the same!)
+//  -refactor all stat variables into a (view) model (see todo comments in that area!)
 
 // #endregion TODO
 
@@ -419,43 +420,157 @@ let scrollBar;
 
 //#endregion GLOBAL VARIALBES - BUTTONS
 
+//#region GLOBAL VARIABLES - USER STATS
+//TODO: refactor all these to be a view model? All can be fetchend whenever stats is opend, OR a rebus is solved, or whatever  instead of keeping track of each one, maybe on ebig function that is just 'refresh stats'
 
-//! stat recording variables
-let numberOfCompletedRebuses = 0; // stores number of rebus puzzles that have been solved
-let numberOfCompletedRebusesWithoutHints = 0; // stores number of rebus puzzles solved before the user looked at that puzzle's hints
-let numberOfCompletedRebusesInCurrentCategory = 0; // stores number of rebus puzzles that have been solved in the current category
-let solvedRebusNames = []; // stores NAMES of solved rebuses
-let numberOfIncorrectGuesses = 0; // also used to calculate the 'worst guess yet' stat
-let numberOfHintsUsed = 0;  // counter to keep track of the number of hitns a user has used
+//TODO: Refactor into get function from list of rebuses, maybe? so I don't ahve to keep updataing. But I don't want to slow down the frame rate either
+/** number of rebus puzzles that have been solved
+ *  @type {number} */ 
+let numberOfCompletedRebuses = 0;
+
+//TODO: refactor to 'get' function'?
+/** number of rebus puzzles the user solved without looking at their hints
+ *  @type {number} */
+let numberOfCompletedRebusesWithoutHints = 0;
+
+//TODO: refactor to 'get' function'?
+/** number of rebus puzzles that have been solved in the current category
+ *  @type {number} */
+let numberOfCompletedRebusesInCurrentCategory = 0;
+
+//TODO: refactor to 'get' function'?
+/** List of names of all solved rebuses (used for local storage i think, not the stats window)
+ *  @type {string[]} */ 
+let solvedRebusNames = [];
+
+/** Used to help calculate the 'worst guess yet' stat
+ *  @type {number} */
+let numberOfIncorrectGuesses = 0;
+
+//TODO: refactor to 'get' function'?
+/** number of hints a user has used
+ *  @type {number} */ 
+let numberOfHintsUsed = 0;
+
+//TODO: refactor to 'get' function'?
+/** category that the user has solved the most rebuses in, based on quantity (not %)
+ *  @type {string} */ 
 let strongestCategory = 'none yet';
-let worstGuessSoFar = 'none yet'; //stores user's 'worst' incorrect guess made so far
-let totalTimePlaying = 0;  // stores time, in seconds, the tab has been active
-let isTabActive = true; // true if the tab with this script is active
-let rebusSolvingRate; // time it's taken user to solve each puzzle, on average
-let rebusRanks = []; // array containing all rebus ranks
+
+/** user's 'worst' incorrect guess made so far
+ *  @type {string} */ 
+let worstGuessSoFar = 'none yet';
+
+/** stores time (in seconds) that this tab (in the browser) has been active.
+ * Stored in, and retrieved from, user's browser's local storage and cummulative over time.
+ *  @type {number} */ 
+let totalTimePlaying = 0;
+
+/** true if the tab with this script is active
+ *  @type {bool} */ 
+let isTabActive = true;
+
+//TODO: refactor to 'get' function'?
+/** time (seconds) it's taken user to solve each puzzle, on average
+ *  @type {number} */ 
+let rebusSolvingRate;
+
+/** array containing all rebus ranks.
+ * Loaded from csv file during setup
+ *  @type {string[]} */ 
+let rebusRanks = [];
+
+//TODO: refactor to 'get' function'?
+/** stringified list of which hints for which rebuses have been used.
+ * Used for saving to and loading from global storage (I think?)
+ *  @type {string[]} */ 
 let hintsUsed = [];
 
-//! DOM element variables, ordered from top to bottom
-// stored as p5.element objects so their CSS properties and events/inputs can be used in p5.js functions
-let navbar; // holds DOM navbar DIV elements
-let navbarHeightCurrent = 40; // stores current height of nav bar, updated based on size changes
-const navbarHeightDesktop = 40; // size of nav bar on desktop displays (px)
-const navbarHeightMobile = 120; // size of nav bar on mobile displays (px)
-let container;  // holds DOM div element that contains canvas and text input box
-let logo; // holds DOM element containing rebus city logo
-let instagramLinkContainer; // holds DOM <a> link element, links to @rebus.city instagram page
-let instagramLinkURL = 'https://www.instagram.com/rebus.city/'; // path to instagram page
-let instagramLinkIcon;  // holds DOM image element with isntagram logo
-let optionsMenu;  // holds DOM select menu of options
-let categoryMenu; // holds DOM select menu of rebus categories
-let textInputBox; // holds DOM input element used for entering possible rebus solutions
-let hintText; // holds DOM <p> element that contains and displays the hint string when needed
+//#endregion GLOBAL VARIABLES - USER STATS
+
+//#region GLOBAL VARIABLES - DOM ELEMENTS
+// All DOM elements created within this script
+// Stored as p5.element objects so their CSS properties and events/inputs can be used in p5.js functions
+// ordered here from 'top' to 'bottom' (sort of)
+
+/** DIV that contains all DOM navbar elements
+ * (type: p5.Element) */
+let navbar;
+
+/** current height of nav bar (px)
+ * updated based on the screen size, and whenever the screen size changes
+ * @type {numbers} */
+let navbarHeightCurrent = 40;
+
+/** height of nav bar when in desktop mode (px)
+ * @type {number} */
+const navbarHeightDesktop = 40;
+
+/** height of nav bar when in mobile mode (px)
+ * @type {number} */
+const navbarHeightMobile = 120; 
+
+/** <div> element that contains main canvas and text input box
+ * (type: p5.Element) */
+let container;
+
+/** <p> element containing rebus city logo
+ * (type: p5.Element) */
+let logo;
+
+/** <div> element, that conatins link element to @rebus.city instagram page
+ * (type: p5.Element) */
+let instagramLinkContainer;
+
+/** URL to rebus city instagram page
+ * @type {string} */
+const instagramLinkURL = 'https://www.instagram.com/rebus.city/';
+
+/** <a> element with istagram logo background, that linkes to @rebus.city instagram
+ * (type: p5.Element) */
+let instagramLinkIcon;
+
+/** <select> element containing dropdown options menu
+ * (type: p5.Element) */
+let optionsMenu;
+
+/** <select> element containing dropdown cateogry menu
+ * (type: p5.Element) */
+let categoryMenu;
+
+/** <input> element for entering rebus solution guesses
+ * (type: p5.Element) */
+let textInputBox;
+
+/** <p> element that contains and displays the hint string when needed
+ * (type: p5.Element) */
+let hintText;
+
+/** <canvas> element that contains entire p5.js sketch!
+ * (type: p5.Element) */
 let canvas; // holds DOM canvas element
-let footer; // holds DOM footer element
-const footerHeight = 20;  // height of DOM footer element
-let totalScoreP; // <p> dispalying current  number of rebuses solved
-let categoryScoreP; // <p> displaying current number of rebuses for current category solved
-let copyrightP; // <p> containing current copyright year
+
+/** <div> footer element
+ * (type: p5.Element) */
+let footer;
+
+/** height (px) of footer <div>
+ * @type {} */
+const footerHeight = 20;
+
+/** <p> element dispalying current number of rebuses solved
+ * (type: p5.Element) */
+let totalScoreP; //
+
+/** <p> element displaying current number of rebuses for current category solved
+ * (type: p5.Element) */
+let categoryScoreP;
+
+/** <p> element containing current copyright year, goes in footer
+ * @type {} */
+let copyrightP;
+
+//#endregion GLOBAL VARIABLES - DOM ELEMENTS
 
 //#endregion GLOBAL VARIABLES
 
