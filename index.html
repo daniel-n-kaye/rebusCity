@@ -1,15 +1,33 @@
 <html>
+
 <head>
     <!--     <meta name="viewport" content="width=device-width, initial-scale=1"> -->
     <!--     this below meta tag lets page render correctly when rotated form landscape back toportraite on a mobile device. Using it for now instead of the standard meta tag above, until i figure out how this viewport thing really works -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, minimum-scale=1.0">
+
+    <!--link to my style sheet-->
     <link rel="stylesheet" type="text/css" href="CSS_rebusCity.css">
 
     <!--Shows a warning if the user in using Internet Explorer.
     This script must be loaded BEFORE the p5.js library, because that on it's own will break in IE-->
     <script src="detectInternetExplorer.js"></script>
 
-    <script src="p5/lib/p5.js"></script>
+    <!--load the p5.js library!-->
+    <script src="p5/lib/p5.min.js"></script>
+
+    <!--load all class object models required for the main rebus city script-->
+    <script src="models/Rebus.js"></script>
+    <script src="moels/XYPosition.js"></script>
+    <script src="models/ButtonRound.js"></script>
+    <script src="models/ButtonRectangular.js"></script>
+    <script src="models/ScrollButton.js"></script>
+    <script src="models/ScrollBar.js"></script>
+
+    <!--load unit testing models-->
+    <script src="models/UnitTestResult.js"></script>
+    <script src="models/UnitTestRunner.js"></script>
+
+    <!--load main rebus city script-->
     <script src="rebusCity.js"></script>
 
     <!-- google font similar to century gothic -->
@@ -17,6 +35,7 @@
 
     <link rel="icon" type="image/png" href="data/Icon-1024.png">
 
+    <!--TODO: Get google analytics account for rebus city to work! I think i need a rebus city domain naim and email first...-->
     <!--google analytics script-->
     <!--
         <script>
@@ -31,20 +50,24 @@
         </script>
     -->
 </head>
+
 <body>
-    <!-- displays loading gif while preload stuff is loading (before actual loading screen loads! LOL) -->
+    <!-- displays loading gif while data inside rebus city sketch is loading (loading gif before the loading screen loads!) -->
     <div id="p5_loading">
         <img src="data/preloading.gif" alt="preloading GIF">
     </div>
 
+    <!--top bar of website-->
     <div id="navbarContainer">
         <div id="navbar">
         </div>
     </div>
 
+    <!--main canvas/p5 sketch / content of site-->
     <div id="container">
     </div>
 
+    <!--footer-->
     <footer id="footer">
     </footer>
 

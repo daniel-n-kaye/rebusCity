@@ -413,6 +413,13 @@
     <Content Include="data\thinkOutsideTheBox.jpg" />
     <Content Include="index.html" />
     <Content Include="detectInternetExplorer.js" />
+    <Content Include="models\XYPosition.js" />
+    <Content Include="models\ScrollBar.js" />
+    <Content Include="models\PastTouch.js" />
+    <Content Include="models\ScrollButton.js" />
+    <Content Include="models\ButtonRectangular.js" />
+    <Content Include="models\ButtonRound.js" />
+    <Content Include="models\Rebus.js" />
     <Content Include="p5\lib\addons\p5.sound.js" />
     <Content Include="p5\lib\addons\p5.sound.min.js" />
     <Content Include="p5\lib\empty-example\index.html" />
@@ -422,6 +429,8 @@
     <Content Include="p5\lib\README.txt" />
     <Content Include="p5\__MACOSX\lib\empty-example\._index.html" />
     <Content Include="rebusCity.js" />
+    <Content Include="unitTesting\UnitTestResult.js" />
+    <Content Include="unitTesting\UnitTestRunner.js" />
     <Content Include="unitTestResults.html" />
     <Content Include="Web.config" />
   </ItemGroup>
