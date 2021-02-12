@@ -142,6 +142,10 @@
 //  -use list of categories instead of first/second/third, ect
 //  -refactor all x/y objects to use a single 2d vector object instead of two different variables for x and y
 //  -*Update all methods using intellisense comments for visual studios
+//  -fix 'X' location button for active rebus in mobile - doesn't adapt when i flex browser screen size!
+//  -fix 'x' button for all about/hint/contact windows = use two lines instead of an 'x' charecter, becaues often it's not centered, and the font could change!
+//  -namespace all p5 variables
+//  -Convert lost of simple x/y postion vectors to my own 2dposition class! (then they'll show up in intellisense, and if i dont' need all the extra data/properties taht come with a p5.vector object, why use em? I can easily switch it out anytime to, just by changing the point where it's constructed, as long as i keep the .x and .y syntax the same!)
 
 // #endregion TODO
 
@@ -153,8 +157,8 @@
 
 /** when true, unit tests will be run 
  @type {boolean} */
-//let runUnitTests = true; //! Change to false before release!
-let runUnitTests = false; //! Change to true to test!
+let runUnitTests = true; //! Change to false before release!
+//let runUnitTests = false; //! Change to true to test!
 
 //#endregion GLOBAL VARIABLES - DEBUG AND TESTING
 
@@ -200,48 +204,139 @@ let rebuses = []; // stores array of all rebus objects
 /** stores the list of currently filtered rebus indices
  * @type {number[]} */
 let filteredRebusIndices = []; // stores the list of currently filtered rebus indices
-let aRebusIsCurrentlyActive = false; // true when a rebus is currently selected/active
-let activeRebusIndex; // stores index of currently active rebus
-let activeFilteredRebusIndex; // stores index of currently active rebus IN THE FILTERED ARRAY
-let categories = [];  // stores array of categories to be used for filtering rebuses, populated from rebus data table
-let currentCategory = 'General'; // only rebuses that match the current category are drawn
-let startingY = 0;  // Y value at which to draw the first rebus puzzle (used to control scrolling)
-const rebusWidthMax = 180;  // largest a rebus should get (won't look good if any bigger). Rebuses are square, so a height variable sin't needed
-let rebusWidthCurrent = 180;  // stores current width of rebus (changes responivley based on screen size)
-const horizontalSpacingMax = 25;  // spacing (px) between rebuses in desktop mode (no horz spacing in mobile mode)
-let horizontalSpacingCurrent = 25;  // current horizontal spacing based on screen size, could be horizontalSpacingMax or '0'
-let activeRebusWidthMobile = rebusWidthCurrent * 2; // width & height of active rebus images when displayed in mobile mode
-//TODO: Refactor these to use a 2d vector object
-let activeRebusMobileX; // initialized in resize function, because it is based on canvas width, X loc of top-left corner of active rebus image when drawing on mobile mode
-let activeRebusMobileY = 10; // X loc of top-left corner of active rebus image when drawing on mobile mode
-let numOfRowsThatFitOnscreen;  // stores the number of full rebuses that fit on the current screen, recalculated every time window is resized
-let rowHeight; // height (in pixels) of a row of rebuses, included buffer space (rebusWidthCurrent + horizontalSpacingCurrent) - updated whenever screen size changes
-let numOfRows; // number of rows of rebuses in the current category (filteredRebuses.length / 3, rounded up) - updates when category is changed
+
+/** true when a rebus is currently selected/active
+ * @type {boolean} */
+let isARebusIsCurrentlyActive = false;
+
+/** stores index of currently active rebus 
+ * @type {number} */
+let activeRebusIndex;
+
+/** stores index of currently active rebus IN THE FILTERED ARRAY
+ * @type {number} */
+let activeFilteredRebusIndex;
+
+/** stores array of categories to be used for filtering rebuses,
+ * populated from rebus data table
+ * @type {string[]} */
+let categories = [];
+
+/** only rebuses that match this current category are drawn
+ *  @type {string} */
+let currentCategory = 'General';
+
+/** Y value at which to draw the first rebus puzzle (used to control scrolling)
+ * @type {number} */
+let startingY = 0;
+
+/** largest a rebus should get (px) (rebus won't look good if any bigger).
+ * Rebuses are square, so a height variable sin't needed
+ * @type {number} */
+const rebusSizeMax = 180;
+
+/** stores current width of a rebus (changes responivley based on screen size)
+ * @type {number} */
+let rebusSizeCurrent = 180;
+
+/** spacing (px) between rebuses in desktop mode.
+ * (there is no spacing inbetween rebuses in mobile mode)
+ * @type {number} */
+const spacingBetweenRebusesDesktop = 25;
+
+/** current horizontal spacing based on screen size.
+ * This should either be spacingBetweenRebusesDesktop or '0'
+ * (because there is no spacing inbetween rebuses in mobile mode)
+ * @type {number} */
+let spacingBetweenRebusesCurrent = 25;
+
+/** width & height of active rebus images when displayed in mobile mode.
+ * can change, based on the currnet screen or window size
+ * @type {number} */
+let activeRebusSizeMobile = rebusSizeCurrent * 2;
+
+/** Position (px) of top-left corner of active rebus image when drawing on mobile mode.
+ * (initizliaed in setup, but actually set in the 'resize' function, because
+ * it's based off of the browser's screen size
+ * (type: p5.Vector) */
+let activeRebusPositionMobile;
+
+/** Stores the number of full rebuses that fit on the current screen.
+ * Recalculated every time window is resized.
+ * @type {number} */
+let numOfRowsThatFitOnscreen;  
+
+/** height (px) of a single row of rebuses, included buffer space below that row.
+ * Updated whenever screen size changes.
+ * @type {number} */
+let rowHeight; 
+
+/** number of rows of rebuses in the current category. (filteredRebuses.length / 3, rounded up).
+ * Updates when category is changed 
+ * @type {number} */
+let numOfRows; 
 
 //#endregion GLOBAL VARIABLES - REBUS DATA
 
+//#region GLOBAL VARIABLES - INPUT TEXT BOX PROPERTIES
 
-//! other object position variables
-let textBoxHeightMobile = 40; // height of text box on mobile devices, in pixels 
-//TODO: Refactor these to use a 2d vector object
-let textBoxMobileX; // X loc of top-left corner of input text box on mobile devices, initialized in window resize functions because it's based on width
-let textBoxMobileY = activeRebusWidthMobile + 2 * activeRebusMobileY; // Y loc of top left corner of input text nox on mobile devices
+/** height of text box on mobile devices (px)
+ * @type {number} */
+const textBoxHeightMobile = 40;
 
-//! animation / scroling variables
-let swiping = false;  // true if user is currently swiping their finger
-let currentlyScrolling = false; // true if rebus list is currently scrolling
-let scrollDistanceRemaining = 0;  // amount (px) more needed to be scroll, can be positive (down) or negative (up)
-let scrollRate = 0; // number of times scholling event (mouse wheel / touchpad swipe) is fired per 100ms
-let startingYAtTouchStart;  // startingY value when the use stared touching the screen
-//TODO: Refactor these to use a 2d vector object
-let touchStartedX; // x location of where current touch started, all relative to canvas
-let touchStartedY; // y lovation of where current touch started
-//TODO: Refactor these to use a 2d vector object
-let touchEndedX; // x location of where last touch ended
-let touchEndedY; // y location of where last touch ended
-let swipeVelocity = 0; // velocity in pixels / milisecond of current or last swipe
+/** Location (px) of top-left corner of input text box on mobile devices.
+ * Initialized in window resize functions because it's based on screen width
+ * (type: p5.Vector) */
+let textBoxPositionMobile;
+
+//#endregion GLOBAL VARIABLES - INPUT TEXT BOX PROPERTIES
+
+//#region GLOBAL VARIABLES - ANIMATION AND SCROLLING
+
+/** true if user is currently swiping their finger
+ * @type {boolean} */
+let isUserCurrentlySwiping = false;
+
+/** true if rebus list is currently scrolling
+ * @type {boolean} */
+let areRebusesCurrentlyScrolling = false;
+
+/** Amount (px) more needed to be scrolled.
+ * Can be positive (down) or negative (up)
+ * @type {number} */
+let scrollDistanceRemaining = 0; 
+
+//? how exactly is this used?
+/** number of times the native scrolling event (mouse wheel / touchpad swipe) is fired per 100ms.
+ * Note: Originally, I was using the 'value' of the scroll event, but it is incredible inconsistent between browsers,
+ * so I found using the number of times the even is fired to me more effective in capturing the scroll rate (I think?)
+ * @type {number} */
+let scrollRate = 0;
+
+/** Value of the startingY global variable at the moment when the use stared touching the screen
+ * @type {number} */
+let startingYValueWhenTouchStarted;
+
+/** x,y position at which the current touch/swipe started
+ * (type: p5.Vector) */
+let touchStartedPosition;
+
+/** x,y position at which the current touch/swipe ended
+ * (type: p5.Vector) */
+let touchEndedPosition;
+
+/** velocity in pixels / milisecond of current or last swipe
+ * @type {number} */
+let swipeVelocity = 0;
+
 let swipeVelocityRemaining = 0; // remaining velocity to prope swiping
-let pastTouches = []; // x & y location of all previous touches of current swipe
+
+/** array of all past touches of current swipe
+ * @type {PastTouch[]} */
+let pastTouches = [];
+
+//#endregion GLOBAL VARIABLES - ANIMATION AND SCROLLING
+
 
 //! keep track of what type of device is being used
 //  this way various functions can query this without using the media query and other checks used in the 'windowResized' function
@@ -251,6 +346,9 @@ let mobileMode = false;
 
 //! states - objects, only one can be active at a time, and that determains what's durrently being drawn
 //? Do i still even need this?
+//TODO:Refactor to be a sude javasript 'enum'
+//const desktopOrMobileModeEnum = Object.freeze({ "desktopMode": 1, "mobileMode": 2 });
+
 let currentMode = 'rebusMode';
 
 //! buttons (objects) used throughout program
@@ -338,7 +436,10 @@ function setup() {
     createCategories(); // creates category list
     // initializes Canvas of correct size (based on screen size), and ties DOM object to p5 variable
     initializeCanvas();
+    initializeActiveRebusMobilePosition();
+    initializeTextBoxMobilePosition();
     // creates all DOM elements and assigns them to p5. variables
+    //TODO: group these all in one method
     createRanks();  // creates array of rebus ranks (for stats page) from table
     createNavbar();
     createFooter();
@@ -382,7 +483,7 @@ function draw() {
         background(255);  // redraw white background (to cover up previous images)
         if (touches.length > 0) drag();  // moves rebuses based on finger draw, if finger is currently pressed
         drawRebuses();  // draws grid of rebuses
-        if (mobileMode && aRebusIsCurrentlyActive) { // if user is using a mobile device and one of the rebuses is active...
+        if (mobileMode && isARebusIsCurrentlyActive) { // if user is using a mobile device and one of the rebuses is active...
             drawActiveRebus();  // draw the active rebus
         }
         drawGUI();  // draws all graphic user interface objects
@@ -437,8 +538,8 @@ function mouseReleased() {
         return;
     }
     // prevents clicking on a rebus is user currently is swiping
-    if (swiping) {
-        swiping = false;
+    if (isUserCurrentlySwiping) {
+        isUserCurrentlySwiping = false;
         print("user is swiping, can't click now");
         return;
     }
@@ -475,7 +576,7 @@ function mouseReleased() {
     // detects if the active rebuses's main 'hint' button has been clicked on, and toggles it between a '?' and a 'X', also toggles the visibility of the hint1 and hint2 buttons below it
     // if the hint button is clicked on and a rebus is currently active (to prevent next condition from having a null index)
     if (hintButton) { // ensures hint button exists before testing weather it is hovered over (ex: if someone clicks during loading, it may not have been initialized yet)
-        if (hintButton.isHovered() && aRebusIsCurrentlyActive && desktopMode) {
+        if (hintButton.isHovered() && isARebusIsCurrentlyActive && desktopMode) {
             if (rebuses[activeRebusIndex].isHovered()) {  // and the active rebus is also hovered over]
                 print('clicked on hint button');
                 rebuses[activeRebusIndex].showHints = !rebuses[activeRebusIndex].showHints; // toggle the showHints property and then...
@@ -498,13 +599,13 @@ function mouseReleased() {
         }
     }
     // detects if main hint button has been pressed on mobile, and we are not currently hosinwg hints (prevents tapping on 'invisible' main hint button, which is in the same locaiton as the h1 button)
-    if (hintButton.isHovered() && aRebusIsCurrentlyActive && mobileMode && !rebuses[activeRebusIndex].showHints) {
+    if (hintButton.isHovered() && isARebusIsCurrentlyActive && mobileMode && !rebuses[activeRebusIndex].showHints) {
         print('touched hint button on mobile mode!');
         //     hintButton.setLocation(-hintButton.r, -hintButton.r); // hides '?' main hint button by setting it's location outside the canvas
         rebuses[activeRebusIndex].showHints = true; // in 'drawActiveRebus' this triggers hint1 & hint2 buttons to be drawn
         // sets locations of hint1 and hint2 buttons for mobile mode
-        h1Button.setLocation(width - (rebusWidthCurrent / 4), (10 + hintButton.r) * 2.6);
-        h2Button.setLocation(width - (rebusWidthCurrent / 4), (10 + hintButton.r) * 4.1);
+        h1Button.setLocation(width - (rebusSizeCurrent / 4), (10 + hintButton.r) * 2.6);
+        h2Button.setLocation(width - (rebusSizeCurrent / 4), (10 + hintButton.r) * 4.1);
         // sets size of h1 and h2 buttons for mobile mode
         h1Button.r = closeButton.r;
         h2Button.r = closeButton.r;
@@ -532,7 +633,7 @@ function mouseReleased() {
     }
     // detects if hint1 or hint2 button has been clicked on
     // if a rebus is currently active (to prevent next condition from having a null index)...
-    if (aRebusIsCurrentlyActive) {
+    if (isARebusIsCurrentlyActive) {
         if (rebuses[activeRebusIndex].showHints) {  // and the active rebus is displaying hints...
             if (h1Button.isHovered()) { // show hint #1
                 print('clicked on hint button 1');
@@ -548,7 +649,7 @@ function mouseReleased() {
     }
     // exits out of 'active rebus' display mdoe on a mobile device if the 'X' button is pressed
     // if an active rebus is being drawn on a phone, and the close button is pushed
-    if (mobileMode && aRebusIsCurrentlyActive && closeButton.isHovered()) {
+    if (mobileMode && isARebusIsCurrentlyActive && closeButton.isHovered()) {
         if (rebuses[activeRebusIndex].showHints) {
             print('exiting hint mode');
             hintText.hide();
@@ -562,7 +663,7 @@ function mouseReleased() {
         }
     }
     // deactivates active rebus on mobile if user taps in empty space next to the rebus
-    if (mobileMode && aRebusIsCurrentlyActive && !closeButton.isHovered()) {
+    if (mobileMode && isARebusIsCurrentlyActive && !closeButton.isHovered()) {
         if (touchedOutsideActiveRebus()) {
             deactivateAllRebuses();
         }
@@ -576,7 +677,7 @@ function mouseReleased() {
             // if the rebus is hovered over AND it's either desktop mode OR no rebuses are active...
             //  and the rebus has not yet been solved....
             //  and it's not currently already the active rebus...
-            if (rebuses[index].isHovered() && (!aRebusIsCurrentlyActive || desktopMode) && !rebuses[index].solved && activeFilteredRebusIndex != index) {
+            if (rebuses[index].isHovered() && (!isARebusIsCurrentlyActive || desktopMode) && !rebuses[index].solved && activeFilteredRebusIndex != index) {
                 // if its mobile mode && the selected rebus is partially off screen...
                 if (mobileMode && !isRebusOnScreen(index)) {
                     // then scroll up and end the function now (ie don't set the active rebus, scroll up instead)
@@ -658,13 +759,13 @@ function handleTouchMove(evt) {
         if (xDiff > 0) {
             /* left swipe */
             print('swiped left!');
-            if (aRebusIsCurrentlyActive) {
+            if (isARebusIsCurrentlyActive) {
                 incrimentActiveRebus('backward');
             }
         } else {
             /* right swipe */
             print('swiped right!');
-            if (aRebusIsCurrentlyActive) {
+            if (isARebusIsCurrentlyActive) {
                 incrimentActiveRebus('foward');
             }
         }
@@ -672,13 +773,13 @@ function handleTouchMove(evt) {
         if (yDiff > 0) {
             /* up swipe */
             //             print('swiped up!');
-            if (!aRebusIsCurrentlyActive) {
+            if (!isARebusIsCurrentlyActive) {
                 //               scrollDown();
             }
         } else {
             /* down swipe */
             //             print('swiped down!');
-            if (!aRebusIsCurrentlyActive) {
+            if (!isARebusIsCurrentlyActive) {
                 //               scrollUp();
             }
         }
@@ -693,23 +794,23 @@ function touchStarted() {
     print('touch started!!!');
     swipeVelocity = 0;
     swipeVelocityRemaining = 0;
-    touchStartedX = mouseX;
-    touchStartedY = mouseY;
-    startingYAtTouchStart = startingY;  // saves startingY
+    touchStartedPosition.x = mouseX;
+    touchStartedPosition.y = mouseY;
+    startingYValueWhenTouchStarted = startingY;  // saves startingY
     pastTouches = []; // clears previous sqipe from array
     pastTouches[0] = new PastTouch(mouseX, mouseY);
-    //   print('touchDownX: ' + touchStartedX + ', touchStartedY: ' + touchStartedY);
+    //   print('touchDownX: ' + touchStartedPosition.x + ', touchStartedY: ' + touchStartedPosition.y);
 }
 
 function touchMoved() {
-    print('touch moved!!!');
+    //print('touch moved!!!');
     // if user is touching with a finger (aka the left mouse button isn't pressed down)...
     //   if(mouseButton != 'left'){ //  note: the browsers I tested register a left mouseclick as lowercase string 'left'
     //     swiping = true; // prevents something from being clicked on while user is in the middle of swiping their finger
     //     print('swiping!');
     pastTouches.push(new PastTouch(mouseX, mouseY));  // records every movement of the touch/swipe to the array of past touches
     swipeVelocity = calcVelocity(); // every time the touch moves, it recalculates the velocity useing the past 10(?) frames
-    print('swipeVelocity: ' + swipeVelocity)
+    //print('swipeVelocity: ' + swipeVelocity)
     //   }
 }
 
@@ -720,8 +821,7 @@ function touchEnded() {
         mouseReleased();
     }
     //   swiping = false;  // swipe finished
-    touchEndedX = mouseX;
-    touchEndedY = mouseY;
+    touchEndedPosition = createVector(mouseX, mouseY);
     if (abs(swipeVelocity) > 30) {
         print('runing');
         swipeVelocityRemaining = swipeVelocity;
@@ -799,10 +899,10 @@ document.addEventListener('DOMMouseScroll', DoSomething);
 // runs once anytime a mouse wheel event is detected (anytime user scrolls mouse wheel or slides two fingers on a laptop touchpad, ect)
 function mouseWheel(event) {
     //   print(event.delta);  //prints scroll wheel value;
-    if (event.delta > 0 && !currentlyScrolling) {
+    if (event.delta > 0 && !areRebusesCurrentlyScrolling) {
         scrollDown();
     } else
-        if (event.delta < 0 && !currentlyScrolling) {
+        if (event.delta < 0 && !areRebusesCurrentlyScrolling) {
             scrollUp();
         }
     return false;
@@ -818,7 +918,7 @@ function mouseWheel(event) {
 function keyPressed() {
     if (keyCode === ESCAPE) { // if user pressed 'esc' key...
         // if the active rebus is showing hints...
-        if (aRebusIsCurrentlyActive) {
+        if (isARebusIsCurrentlyActive) {
             // exits out of hint mode, but DOESN't deactive taht rebus
             if (rebuses[activeRebusIndex].showHints) {
                 hintButton.setStyle('hintButtonInactive');
@@ -834,7 +934,7 @@ function keyPressed() {
             currentMode = 'rebusMode';
         }
     }
-    if ((keyCode === ENTER || keyCode === RETURN) && aRebusIsCurrentlyActive) {  // if user pressed enter or return and a rebus is currently active...
+    if ((keyCode === ENTER || keyCode === RETURN) && isARebusIsCurrentlyActive) {  // if user pressed enter or return and a rebus is currently active...
         checkGuess(textInputBox.value()); // check if their guess is correct
     }
     if (keyCode === DOWN_ARROW) { // if user pressed down arrow
@@ -843,7 +943,7 @@ function keyPressed() {
     if (keyCode === UP_ARROW) { // if user pressed up arrow
         scrollUp(); // scroll up
     }
-    if (desktopMode && aRebusIsCurrentlyActive) {  // If user is not on a mobile device AND there is currently an active rebus
+    if (desktopMode && isARebusIsCurrentlyActive) {  // If user is not on a mobile device AND there is currently an active rebus
         if (keyCode === LEFT_ARROW) { // if user pressed left arrow
             print('left arrow pressed');
             incrimentActiveRebus('backward');
@@ -863,7 +963,7 @@ function keyPressed() {
 // if a hash change is requested (this includes the back button, I think)
 window.onhashchange = function () {
     // if there is currently already an active rebus AND the user is using a mobile device...
-    if (aRebusIsCurrentlyActive && mobileMode) {
+    if (isARebusIsCurrentlyActive && mobileMode) {
         // deactivating rebuses essentialaly 'exits' out of active rebus mobile mode
         deactivateAllRebuses();
         location.hash = 'home'; // have to add a new hash when you back out of mobile active mode to be used for the next time, the initial loading one only lastas one back button useage
@@ -975,10 +1075,10 @@ function drawLoadingAnimation() {
     textSize(16);
     textAlign(CENTER);
     text('Rebus City - Think Outside The Box',
-        width / 2, height / 2 + rebusWidthMax / 2);
+        width / 2, height / 2 + rebusSizeMax / 2);
     // positions doesn't quite work on very small browser windows yet....
-    image(loadingImage, width / 2 - rebusWidthMax / 2, height / 2 - rebusWidthCurrent,
-        rebusWidthMax, rebusWidthMax);
+    image(loadingImage, width / 2 - rebusSizeMax / 2, height / 2 - rebusSizeCurrent,
+        rebusSizeMax, rebusSizeMax);
 }
 
 
@@ -1019,6 +1119,23 @@ function initializeCanvas() {
     canvas = createCanvas(400, 400); // creates canvas, saves to p5 variable
     canvas.id('canvas'); // sets id of DOM canvas element
     canvas.parent('container'); // sets parent of canvas as container div
+}
+
+/** Initializes the position vector that controls the location
+ * of the active rebus when in mobile mode.
+ * Needs to be initialized early because it is used to calculate 
+ * the size/position of a number of other elements during setup() */
+function initializeActiveRebusMobilePosition() {
+    activeRebusPositionMobile = createVector(0, 10); // x value doesn't matter, it will be set in the 'resize' funtion(s)
+}
+
+/** Initializes the position vector that controls the location
+ * of the input text box when in mobile mode.
+ * Needs to be initialized early because it is used to calculate
+ * the size/position of a number of other elements during setup() */
+function initializeTextBoxMobilePosition() {
+     // just need to initialize the vector object, it's values will be set based on the screen size in the 'screen resized' functions
+    textBoxPositionMobile = createVector(0, 0);
 }
 
 // creates navbar DIV
@@ -1136,7 +1253,7 @@ function createHintButtons() {
     let hintButtons = [hintButton, h1Button, h2Button]; // array of all buttons
     // sets properties that are similar between all hint buttons
     for (let i = 0; i < hintButtons.length; i++) {
-        hintButtons[i].r = rebusWidthCurrent * 0.045;
+        hintButtons[i].r = rebusSizeCurrent * 0.045;
         if (i > 0) {  // sets properties for all but the first hint button
             hintButtons[i].setStyle('h1or2ButtonInactive'); // defaults hint1 and hint2 button the their 'inactive' style
         }
@@ -1174,14 +1291,14 @@ function touchedOutsideActiveRebus() {
     let bool = false;
     // A series of conditions define if the tap/click was in a blank space outside the active rebus
     // if touch below the nav bar, and above the bottom of the active rebus image....
-    if (mouseY > 0 && mouseY < textBoxMobileY) {
+    if (mouseY > 0 && mouseY < textBoxPositionMobile.y) {
         // if touch was between the left edge of the canvas and the left edge of the rebus
-        if (mouseX < (activeRebusMobileX)) {
+        if (mouseX < (activeRebusPositionMobile.x)) {
             print('p1');
             bool = true;
         } else
             // if touch was between the right edge of the rebus and the right edge of the canvas...
-            if (mouseX > (activeRebusMobileX + activeRebusWidthMobile) &&
+            if (mouseX > (activeRebusPositionMobile.x + activeRebusSizeMobile) &&
                 // and none of the buttons were touched....
                 !closeButton.isHovered() && !hintButton.isHovered() && !h1Button.isHovered() && !h2Button.isHovered()) {
                 print('p2');
@@ -1189,12 +1306,16 @@ function touchedOutsideActiveRebus() {
             }
     } else
         // if touch was to the left or right side of the text box...
-        if ((mouseX < textBoxMobileX || mouseX > width - textBoxMobileX) && mouseY > textBoxMobileY && mouseY < textBoxMobileY + textBoxHeightMobile) {
+        if (
+            (mouseX < textBoxPositionMobile.x || mouseX > width - textBoxPositionMobile.x) &&
+            mouseY > textBoxPositionMobile.y &&
+            mouseY < textBoxPositionMobile.y + textBoxHeightMobile)
+        {
             print('p3');
             bool = true;
         } else
             // if youch was between the bottom of the text box and the bottom of the canvas (AKA above the keyboard, if active)
-            if (mouseY > textBoxMobileY + textBoxHeightMobile && textBoxHeightMobile && mouseY < height) {
+            if (mouseY > textBoxPositionMobile.y + textBoxHeightMobile && textBoxHeightMobile && mouseY < height) {
                 print('p4');
                 bool = true;
             }
@@ -1213,7 +1334,7 @@ function touchedOutsideActiveRebus() {
 function drawRebuses() {
     filterRebuses();  // filters the rebuses each time before drawing them (is it necea=sary? idk) maybe later i can filter just when category is changed
     // animates scrolling up or down, if a scroll was recently called
-    if (currentlyScrolling) {  // if the scroll timer is above 0...
+    if (areRebusesCurrentlyScrolling) {  // if the scroll timer is above 0...
         scrollAnimation();  // execute the scroll animation
     }
     let x = 0;  // x position to draw first rebus
@@ -1221,16 +1342,16 @@ function drawRebuses() {
     // loops through all filtered indices
     for (let i = 0; i < filteredRebusIndices.length; i++) {
         // if the y location is NOT above the top of the canvas (ie - negative)...
-        if (y >= -(rebusWidthMax + horizontalSpacingMax)) {
+        if (y >= -(rebusSizeMax + spacingBetweenRebusesDesktop)) {
             // draws the rebus at the x & y location
             rebuses[filteredRebusIndices[i]].drawRebus(x, y);
         }
         // iterates x location to the right the width of a rebus and any required horizontal spacing
-        x += (rebusWidthCurrent + horizontalSpacingCurrent);
+        x += (rebusSizeCurrent + spacingBetweenRebusesCurrent);
         // if the end of the row is reached, iterate down to next row...
         if (x > 0.75 * width) {
             x = 0;  // resets x
-            y += rebusWidthCurrent + horizontalSpacingCurrent; // iterates y down the size of one rebus plus any vertical spaceing (for now horizontal and vertial spacing are always the same)
+            y += rebusSizeCurrent + spacingBetweenRebusesCurrent; // iterates y down the size of one rebus plus any vertical spaceing (for now horizontal and vertial spacing are always the same)
         }
         // if the canvas is full of rebuses (the next y value is below the height) then stop drawing rebuses (to save memory and stuff)
         if (y > height) {
@@ -1243,10 +1364,10 @@ function drawRebuses() {
 function drawTextInputBox(x, y) {
     if (desktopMode) {
         // only moves textbox position around for desktop mode
-        textInputBox.position(x + 20, y + rebusWidthCurrent + 3, 'relative'); // moves textbox under active rebus
+        textInputBox.position(x + 20, y + rebusSizeCurrent + 3, 'relative'); // moves textbox under active rebus
     }
     if (mobileMode) {
-        textInputBox.position(textBoxMobileX, textBoxMobileY, 'relative');  // positions text box centered under mobile large drawing of active rebus
+        textInputBox.position(textBoxPositionMobile.x, textBoxPositionMobile.y, 'relative');  // positions text box centered under mobile large drawing of active rebus
     }
 }
 
@@ -1257,31 +1378,31 @@ function drawActiveRebus() {
     fill(0, 200);
     rect(0, 0, width, height);
     //draws selected rebus larger and centered
-    image(rebuses[activeRebusIndex].image, activeRebusMobileX, activeRebusMobileY,
-        activeRebusWidthMobile, activeRebusWidthMobile);
+    image(rebuses[activeRebusIndex].image, activeRebusPositionMobile.x, activeRebusPositionMobile.y,
+        activeRebusSizeMobile, activeRebusSizeMobile);
     // test code to work on swiping animation on mobile
     //   if(touches.length > 0){
-    //     activeRebusMobileX += 1;
+    //     activeRebusPositionMobile.x += 1;
     //   }
     // draws red rectangle if a recently incorrect answer was entered (on mobile)
     if (rebuses[activeRebusIndex].incorrectAnimationTimer > 0) {
         noStroke();
         fill(255, 0, 0, rebuses[activeRebusIndex].incorrectAnimationTimer)
-        rect(activeRebusMobileX - 1, activeRebusMobileY - 1, activeRebusWidthMobile, activeRebusWidthMobile, 5);
+        rect(activeRebusPositionMobile.x - 1, activeRebusPositionMobile.y - 1, activeRebusSizeMobile, activeRebusSizeMobile, 5);
         rebuses[activeRebusIndex].incorrectAnimationTimer -= 2;
     }
     // draws translucent black rectangle on which to draw hints if hint mode is on
     if (rebuses[activeRebusIndex].showHints) {
         noStroke();
         fill(255, 255 * 0.9);
-        rect(activeRebusMobileX - 1, activeRebusMobileY - 1, activeRebusWidthMobile, activeRebusWidthMobile, 5);
+        rect(activeRebusPositionMobile.x - 1, activeRebusPositionMobile.y - 1, activeRebusSizeMobile, activeRebusSizeMobile, 5);
     }
     // draws outline rectangle over selected rebus
     stroke(217);
     noFill();
     strokeWeight(3);
-    rect(activeRebusMobileX - 1, activeRebusMobileY - 1,
-        activeRebusWidthMobile + 2, activeRebusWidthMobile + 2, 5); // the '-1s' and '+2s' make the outline rectangle a tiny bit larger than the image, in order for the border radius to cover up the image's hard 90 corners
+    rect(activeRebusPositionMobile.x - 1, activeRebusPositionMobile.y - 1,
+        activeRebusSizeMobile + 2, activeRebusSizeMobile + 2, 5); // the '-1s' and '+2s' make the outline rectangle a tiny bit larger than the image, in order for the border radius to cover up the image's hard 90 corners
     closeButton.draw(); // draws 'X' button to close out of actuve rebus mode
     if (!rebuses[activeRebusIndex].showHints)
         hintButton.draw(); // draws '?' botton to access hints, does not draw it when hint buttons 1 and 2 are being shown
@@ -1297,7 +1418,7 @@ function drawActiveRebus() {
         textAlign(CENTER);
         textSize(18);
         let hintTextXLoc = width / 2; // center horizontally
-        let hintTextYLoc = activeRebusMobileY + (activeRebusWidthMobile * 0.1); // near top of large rebus
+        let hintTextYLoc = activeRebusPositionMobile.y + (activeRebusSizeMobile * 0.1); // near top of large rebus
         text(`hints: ${rebuses[activeRebusIndex].numOfHintsUsed()} / ${rebuses[activeRebusIndex].numOfHints}`, hintTextXLoc, hintTextYLoc);
     }
 }
@@ -1305,7 +1426,7 @@ function drawActiveRebus() {
 // darws the temporary stats screen
 function drawStatsScreen() {
     // draws background rectangle
-    let buffer = rebusWidthCurrent / 4;  // buffer for boundary rectangle
+    let buffer = rebusSizeCurrent / 4;  // buffer for boundary rectangle
     stroke(192);
     fill(255);
     strokeWeight(1.5);
@@ -1391,7 +1512,7 @@ function drawStatsScreen() {
 // draws clear confirmation window
 function drawClearScreen() {
     // draws background rectangle
-    let buffer = rebusWidthCurrent / 4;  // buffer for boundary rectangle
+    let buffer = rebusSizeCurrent / 4;  // buffer for boundary rectangle
     stroke(192);
     fill(255);
     strokeWeight(1.5);
@@ -1425,7 +1546,7 @@ function drawClearScreen() {
 // draws contact window (placeholder)
 function drawContactScreen() {
     // draws background rectangle
-    let buffer = rebusWidthCurrent / 4;  // buffer for boundary rectangle
+    let buffer = rebusSizeCurrent / 4;  // buffer for boundary rectangle
     stroke(192);
     fill(255);
     strokeWeight(1.5);
@@ -1464,7 +1585,7 @@ function drawContactScreen() {
 // draws about window (placeholder)
 function drawAboutScreen() {
     // draws background rectangle
-    let buffer = rebusWidthCurrent / 4;  // buffer for boundary rectangle
+    let buffer = rebusSizeCurrent / 4;  // buffer for boundary rectangle
     stroke(192);
     fill(255);
     strokeWeight(1.5);
@@ -1642,12 +1763,12 @@ function drawSolution() {
                 noStroke();
                 textSize(14);
                 textAlign(CENTER);
-                text(rebuses[index].answer, rebuses[index].xLoc + rebusWidthCurrent / 2,
-                    rebuses[index].yLoc + rebusWidthCurrent + horizontalSpacingCurrent / 2 + 5);
+                text(rebuses[index].answer, rebuses[index].xLoc + rebusSizeCurrent / 2,
+                    rebuses[index].yLoc + rebusSizeCurrent + spacingBetweenRebusesCurrent / 2 + 5);
             }
         }
         // if finger is held down over a solved rebus on a mobile device....
-        if (rebuses[index].solved && mobileMode && rebuses[index].isHovered() && touches.length > 0 && !aRebusIsCurrentlyActive) {
+        if (rebuses[index].solved && mobileMode && rebuses[index].isHovered() && touches.length > 0 && !isARebusIsCurrentlyActive) {
             // doesn't start showing answer until finger has been hold over rebus for 30 frames
             if (rebuses[index].hoverDuration > 30) {
                 // opacity lets the answer fade in!
@@ -1660,11 +1781,11 @@ function drawSolution() {
                 // if rebus is in the left column...
                 if (rebuses[index].xLoc == 0) {
                     // offset answer display to left side of screen
-                    xOffset = -0.9 * (rebusWidthCurrent / 2);
+                    xOffset = -0.9 * (rebusSizeCurrent / 2);
                     // if rebus is in the right column...
                 } else if (rebuses[index].xLoc > width / 2) {
                     // offset answer display to right side of screen
-                    xOffset = 0.9 * (rebusWidthCurrent / 2);
+                    xOffset = 0.9 * (rebusSizeCurrent / 2);
                     // if rebus is in center column...
                 } else {
                     xOffset = 0;  // no offset / keep answer display in center
@@ -1673,19 +1794,19 @@ function drawSolution() {
                 let yOffset = 0;  //stays at zero unless...
                 // if rebus is at the top of the screen....
                 if (rebuses[index].yLoc == 0) {
-                    yOffset = rebusWidthCurrent * 2;
+                    yOffset = rebusSizeCurrent * 2;
                 }
                 // draws rectangle in which to write text
                 fill(0, opacity);
                 strokeWeight(1);
                 stroke(192);
-                rect(rebusWidthCurrent / 2 + xOffset, rebuses[index].yLoc - rebusWidthCurrent / 2 + yOffset, rebusWidthCurrent * 2, rebusWidthCurrent / 4, 5);
+                rect(rebusSizeCurrent / 2 + xOffset, rebuses[index].yLoc - rebusSizeCurrent / 2 + yOffset, rebusSizeCurrent * 2, rebusSizeCurrent / 4, 5);
                 // draws text with answer
                 fill(255, opacity + 25);
                 noStroke();
                 textSize(18);
                 textAlign(CENTER);
-                text(rebuses[index].answer, width / 2 + xOffset, rebuses[index].yLoc - (rebusWidthCurrent / 4 + rebusWidthCurrent / 16) + yOffset);
+                text(rebuses[index].answer, width / 2 + xOffset, rebuses[index].yLoc - (rebusSizeCurrent / 4 + rebusSizeCurrent / 16) + yOffset);
             }
         }
     }
@@ -1820,18 +1941,18 @@ function resizeWindowResponsivly() {
 
 // calculates and updates the global variable that keeps track of how many rows of rebuses fit vertically on the current screen
 function calcNumOfRowsThatFitOnscreen() {
-    numOfRowsThatFitOnscreen = floor(height / (rebusWidthCurrent + horizontalSpacingCurrent));
+    numOfRowsThatFitOnscreen = floor(height / (rebusSizeCurrent + spacingBetweenRebusesCurrent));
 }
 
 // calculates height required for row of rebuses, including buffer, based on current screen size
 function calcRowHeight() {
-    rowHeight = rebusWidthCurrent + horizontalSpacingCurrent;
+    rowHeight = rebusSizeCurrent + spacingBetweenRebusesCurrent;
 }
 
 // returns the max width (px) the canvas should stretch twod
 function maxCanvasWidth() {
     // maximum rebus with * 3 columns of rebuses + horizontal Spacing between rebuses * 2
-    return (rebusWidthMax * 3 + horizontalSpacingMax * 2);
+    return (rebusSizeMax * 3 + spacingBetweenRebusesDesktop * 2);
 }
 
 // recalculates the height of the canvas based on current screen size and activity
@@ -1874,7 +1995,7 @@ function resizeNavbar(screenSize) {
 function resizeLogo(screenSize) {
     if (screenSize === 'desktop') {
         //     logo.style('margin-left',(rebusWidthCurrent + horizontalSpacingCurrent + floor(rebusWidthCurrent * 0.14) + 22) + 'px');
-        logo.style('margin-left', (rebusWidthCurrent + horizontalSpacingCurrent + floor(rebusWidthCurrent * 0.13)) + 'px');
+        logo.style('margin-left', (rebusSizeCurrent + spacingBetweenRebusesCurrent + floor(rebusSizeCurrent * 0.13)) + 'px');
         logo.style('padding-left', '');
         logo.style('font-size', '28px');
         logo.style('text-align', 'left');
@@ -1897,7 +2018,7 @@ function resizeInstagramLink(screenSize) {
         instagramLinkIcon.style('width', '20px');
         instagramLinkIcon.style('height', '20px');
         instagramLinkIcon.style('background-size', '20px');
-        instagramLinkIcon.style('left', ((rebusWidthCurrent * 2) + 8) + 'px'); // same left margin as logo, minus the instagram link image width and  some padding at the end, which is 2
+        instagramLinkIcon.style('left', ((rebusSizeCurrent * 2) + 8) + 'px'); // same left margin as logo, minus the instagram link image width and  some padding at the end, which is 2
         instagramLinkIcon.style('top', '2px');
     }
     if (screenSize === 'mobile') {
@@ -1905,7 +2026,7 @@ function resizeInstagramLink(screenSize) {
         instagramLinkIcon.style('height', '40px');
         instagramLinkIcon.style('background-size', '40px');
         instagramLinkIcon.style('top', (120 - 40 - 10) + 'px');
-        instagramLinkIcon.style('left', (rebusWidthCurrent * 0.1) + 'px');
+        instagramLinkIcon.style('left', (rebusSizeCurrent * 0.1) + 'px');
     }
 }
 
@@ -1970,11 +2091,11 @@ function resizeCategoryMenu(screenSize) {
 function resizeRebusWidth(screenSize) {
     // if screen is wide enough, use maximum rebus width
     if (screenSize === 'desktop') {
-        rebusWidthCurrent = rebusWidthMax;
+        rebusSizeCurrent = rebusSizeMax;
     }
     //  if screen is smaller, scale rebuses
     else {
-        rebusWidthCurrent = width / 3;  // no horizontal spacing used in 'mobile' mode
+        rebusSizeCurrent = width / 3;  // no horizontal spacing used in 'mobile' mode
     }
 }
 
@@ -1982,11 +2103,11 @@ function resizeRebusWidth(screenSize) {
 function resizeHorizontalSpacing(screenSize) {
     // if screen is wide enough, use standard spacing inbetween puzzles (needed to make room for text box)
     if (screenSize === 'desktop') {
-        horizontalSpacingCurrent = horizontalSpacingMax;
+        spacingBetweenRebusesCurrent = spacingBetweenRebusesDesktop;
     }
     //  if screen is smaller, text box appears differently, so no padding between rebus puzzles is needed
     else {
-        horizontalSpacingCurrent = 0;
+        spacingBetweenRebusesCurrent = 0;
     }
 }
 
@@ -2047,14 +2168,14 @@ function resizeScore(screenSize) {
 // repositions and restyles the hint text based on the screen device and size
 function resizeHintText(screenSize) {
     if (screenSize === 'desktop') {
-        hintText.style('width', (rebusWidthCurrent * 0.7) + 'px');
+        hintText.style('width', (rebusSizeCurrent * 0.7) + 'px');
         hintText.style('color', 'white');
         hintText.style('font-size', 'medium');
     } else {
-        hintText.style('width', floor(activeRebusWidthMobile * 0.7) + 'px');
+        hintText.style('width', floor(activeRebusSizeMobile * 0.7) + 'px');
         hintText.style('color', 'black');
         hintText.style('font-size', 'large');
-        hintText.position(activeRebusMobileX + (0.15 * activeRebusWidthMobile), activeRebusMobileY, 'relative');
+        hintText.position(activeRebusPositionMobile.x + (0.15 * activeRebusSizeMobile), activeRebusPositionMobile.y, 'relative');
     }
 }
 
@@ -2072,10 +2193,11 @@ function resizeButtons(screenSize) {
 // placed here so it will upadte every time the window resizes (and when program initializes)
 // works the same way on mobile and desktop, so it doesn't need to take any arguments
 function resizeActiveRebusMobileVariables() {
-    activeRebusWidthMobile = rebusWidthCurrent * 2; // makes active rebus on mobile twice as big as normal rebus, aka 2/3 the screen size
-    activeRebusMobileX = width / 2 - activeRebusWidthMobile / 2; // horizontally centers active rebus image
-    textBoxMobileY = activeRebusWidthMobile + 2 * activeRebusMobileY; // height of active rebus plus a butter on top and on bottom
-    textBoxMobileX = floor(width * 0.1); // text box is set to 80% in css, so this centers it horizontally
+    // actually resize mobile values...
+    activeRebusSizeMobile = rebusSizeCurrent * 2; // makes active rebus on mobile twice as big as normal rebus, aka 2/3 the screen size
+    activeRebusPositionMobile.x = width / 2 - activeRebusSizeMobile / 2; // horizontally centers active rebus image
+    textBoxPositionMobile.y = activeRebusSizeMobile + 2 * activeRebusPositionMobile.y; // height of active rebus plus a butter on top and on bottom
+    textBoxPositionMobile.x = floor(width * 0.1); // text box is set to 80% in css, so this centers it horizontally
 }
 
 // // cool function i found that performs an action when a phone rotates between landscape and portrate mode. couldn't get it to reset the browser zoom though...
@@ -2121,12 +2243,12 @@ function scrollDown() {
         //     print('scrolling down!');
         // if the scroll down button hasn't been pressed too many times....
         //  this prevents someone pressing the down arrow like 30 times, then having to wait 30 seconds until it finishes scrolling
-        if (scrollDistanceRemaining < (rebusWidthCurrent + horizontalSpacingCurrent) * 0.5) { // dedede
+        if (scrollDistanceRemaining < (rebusSizeCurrent + spacingBetweenRebusesCurrent) * 0.5) { // dedede
             // calculates distance (px) needed to scroll down one more row
             scrollDistanceRemaining += rowHeight;
         }
         //  adjusts global variable to tell drawRebuses to call the scrollAnimation function while it's drawing all the rebuses
-        currentlyScrolling = true;
+        areRebusesCurrentlyScrolling = true;
         deactivateAllRebuses(); // prevents text box from getting 'caught' at the bottom or top of the page while scrolling
         scrollButtonDown.opacityTimer = (255 * 0.75); // makes down arrow flash on the screen
     } else {  // if there aren't more rebuses below...
@@ -2148,12 +2270,12 @@ function scrollUp() {
         //     print('scrolling up!');
         // if the scroll down button hasn't been pressed too many times....
         //  this prevents someone pressing the down arrow like 30 times, then having to wait 30 seconds until it finishes scrolling
-        if (scrollDistanceRemaining > -1 * ((rebusWidthCurrent + horizontalSpacingCurrent) * 0.5)) {
+        if (scrollDistanceRemaining > -1 * ((rebusSizeCurrent + spacingBetweenRebusesCurrent) * 0.5)) {
             // calculates distance (px) needed to scroll down 3 rows of rebuses
             scrollDistanceRemaining -= rowHeight;
         }
         //  adjusts global variable to tell drawRebuses to call the scrollAnimation function while it's drawing all the rebuses
-        currentlyScrolling = true;
+        areRebusesCurrentlyScrolling = true;
         deactivateAllRebuses(); // prevents text box from getting 'caught' at the bottom or top of the page while scrolling
         scrollButtonUp.opacityTimer = (255 * 0.75); // makes down arrow flahs on the screen
     } else {  // if there aren't more rebuses below...
@@ -2174,7 +2296,7 @@ function atBottom() {
 
 // returns true if there are not more rebuses above
 function atTop() {
-    if (startingY < -(rebusWidthCurrent)) {
+    if (startingY < -(rebusSizeCurrent)) {
         return false;
     } else {
         return true;
@@ -2186,7 +2308,7 @@ function scrollAnimation() {
     // if scrolling down....
     if (scrollDistanceRemaining > 0) {
         // keeps down scrolling arrow opacity at it's darkest value as long as there's more than a full row left to scroll
-        if (scrollDistanceRemaining > rebusWidthCurrent + horizontalSpacingCurrent) {
+        if (scrollDistanceRemaining > rebusSizeCurrent + spacingBetweenRebusesCurrent) {
             scrollButtonDown.opacityTimer = (255 * 0.75);
         }
         // incriments scrollDistanceRemaining if down arrow button is held down while the programing is already scrolling...
@@ -2205,7 +2327,7 @@ function scrollAnimation() {
         // //       swipeVelocityRemaining -= 10;
         //     }
         // tiered scrolling conditions that slow scroll as it nears the end
-        if (scrollDistanceRemaining > rebusWidthCurrent * 0.5) {
+        if (scrollDistanceRemaining > rebusSizeCurrent * 0.5) {
             // velocity based on swipe input
             //       if(swipeVelocityRemaining > 30){
             //         startingY -= 12 + (swipeVelocityRemaining);
@@ -2231,7 +2353,7 @@ function scrollAnimation() {
         // if scrolling up....
         if (scrollDistanceRemaining < 0) {
             // keeps down scrolling arrow opacity at it's darkest value as long as there's more than a full row left to scroll
-            if (scrollDistanceRemaining < -1 * (rebusWidthCurrent + horizontalSpacingCurrent)) {
+            if (scrollDistanceRemaining < -1 * (rebusSizeCurrent + spacingBetweenRebusesCurrent)) {
                 scrollButtonUp.opacityTimer = (255 * 0.75);
             }
             // incriments scrollDistanceRemaining if up arrow button is held down while the programing is already scrolling...
@@ -2245,7 +2367,7 @@ function scrollAnimation() {
                 scrollUp();
             }
             // tiered scrolling conditions that slow scroll as it nears the end
-            if (scrollDistanceRemaining < -1 * rebusWidthCurrent * 0.5) {
+            if (scrollDistanceRemaining < -1 * rebusSizeCurrent * 0.5) {
                 let deltaY = 12 + ((scrollRate * scrollRate) / 3);  // squareing scroll rate essentialy negeates negative values, use of abs() is not necesary, clever ;)
                 //       print('deltaY: ' + deltaY);
                 startingY += 12 + ((scrollRate * scrollRate) / 3);
@@ -2267,7 +2389,7 @@ function scrollAnimation() {
         }
     // if scrolling is finished, rounds startingY to closest row value, and sets global scrolling variable to false
     if (scrollDistanceRemaining == 0) {
-        currentlyScrolling = false;
+        areRebusesCurrentlyScrolling = false;
         // rounds startingY to closest exact row
         let remainder = abs(startingY % rowHeight); //either0.1 or 239.9
         if (remainder < rowHeight / 2) {
@@ -2287,7 +2409,7 @@ function scrollAnimation() {
 function settle() {
     //   print('running settle');
     let remainder = abs(startingY % rowHeight); // pixels left to scroll to reach an even interval
-    if (remainder > 0) currentlyScrolling = true;
+    if (remainder > 0) areRebusesCurrentlyScrolling = true;
     // if closest even row is up....
     if (remainder < rowHeight / 2) {
         // scroll up to next even row
@@ -2303,10 +2425,11 @@ function settle() {
 function drag() {
     if (touches.length > 0) {
         //     print(touches);
-        let delta = touchStartedY - touches[0].y;
+        //let delta = touchStartedY - touches[0].y;
+        let delta = touchStartedPosition.y - touches[0].y;
         let limitTop = 0;
         let limitBottom = -1 * ((numOfRows - 1) * rowHeight);
-        startingY = startingYAtTouchStart - delta;
+        startingY = startingYValueWhenTouchStarted - delta;
         if (startingY > limitTop) startingY = limitTop;
         if (startingY < limitBottom) startingY = limitBottom;
     }
@@ -2704,10 +2827,10 @@ function setActiveRebus(index) {
     // resets hover durration counter when rebus is made active (so hint icon doesn't appear immedietly if user clicks on a rebus they've been hovering mose over before clicked on
     rebuses[filteredRebusIndices[activeFilteredRebusIndex]].hoverDuration = 0;
     textInputBox.show();  // unhides text box when a rebus is active (so user can enter guesses!)
-    aRebusIsCurrentlyActive = true; // global variable, used to trigger actions in draw loop
+    isARebusIsCurrentlyActive = true; // global variable, used to trigger actions in draw loop
     if (mobileMode) { // if user is on a mobile device...
         closeButton = new ButtonRound();  // creates a new close button
-        closeButton.setLocation(width - (rebusWidthCurrent / 4), 10 + closeButton.r); // sets the location of that close button
+        closeButton.setLocation(width - (rebusSizeCurrent / 4), 10 + closeButton.r); // sets the location of that close button
         closeButton.setStyle('closeButtonMobile');  // styles close button for mobile
         closeButton.textSize = closeButton.r * 1.5;
         hintButton.textSize = closeButton.r * 1.5;
@@ -2740,7 +2863,7 @@ function deactivateAllRebuses() {
     h1Button.setStyle('h1or2ButtonInactive');
     h2Button.setStyle('h1or2ButtonInactive');
     hintText.hide();
-    aRebusIsCurrentlyActive = false; // global variable, used to trigger actions in draw loop
+    isARebusIsCurrentlyActive = false; // global variable, used to trigger actions in draw loop
 }
 
 // sets all solved rebus puzzles back to unsolved
@@ -2837,8 +2960,8 @@ function toggleHints(hintNumber) {
     if (rebuses[activeRebusIndex].numOfHints === 0) {
         hintText.html("This puzzle doesn't yet have any hints");
     }
-    let hintTextLocX = rebuses[activeRebusIndex].xLoc + (rebusWidthCurrent * 0.15);
-    let hintTextLocY = rebuses[activeRebusIndex].yLoc + (rebusWidthCurrent * 0.14);
+    let hintTextLocX = rebuses[activeRebusIndex].xLoc + (rebusSizeCurrent * 0.15);
+    let hintTextLocY = rebuses[activeRebusIndex].yLoc + (rebusSizeCurrent * 0.14);
     hintText.show(); // makes hint text visible
     // if hint1 button was clicked on and this rebus actually has a hint 1...
     if (hintNumber === 1 && rebuses[activeRebusIndex].hint1) {
@@ -2865,7 +2988,7 @@ function toggleHints(hintNumber) {
     }
     // if hint2 button was clicked on and this rebus actually has a hint 2...
     if (hintNumber === 2 && rebuses[activeRebusIndex].hint2) {
-        hintTextLocY += rebusWidthCurrent * 0.11;  // incriments downward slightly the location of the second hint button
+        hintTextLocY += rebusSizeCurrent * 0.11;  // incriments downward slightly the location of the second hint button
         h2Button.setStyle('h1or2ButtonActive'); // set style of hint2 button to 'active' (FYI: active used and active unused are the same)
         h1Button.setStyle('h1or2ButtonInactive'); // set style of hint1 btton to 'inactive'
         if (rebuses[activeRebusIndex].hint1Viewed) { // if hint1 has already been used....
@@ -2911,720 +3034,10 @@ function toggleHints(hintNumber) {
 // returns true if the rebus at the argument index is fully displayed on the screen
 function isRebusOnScreen(index) {
     let bool = true;
-    if (rebuses[index].yLoc + rebusWidthCurrent + horizontalSpacingCurrent > height) {
+    if (rebuses[index].yLoc + rebusSizeCurrent + spacingBetweenRebusesCurrent > height) {
         bool = false;
     }
     return bool;
-}
-
-
-// plans suprise birthday party for Tony by using the Super Suprise Birthday Party database
-function SSBP() {
-    let birthday;
-    if (date.today === tony.birthday) {
-        print('commence Operation TonyTime');
-        throwPartyForTony(possibleLocations, foodOrder, guestList);
-        sendInvites();
-        return
-    } else {
-        print('sorry, not today');
-        return false;
-    }
-}
-
-// returns a party for tony
-// takes (3) arguments: array of location strings, array of food objects, and list of possible guests
-function throwPartyForTony(locs, foods, guests) {
-    // sets location
-    let location = locs[floor(random(0, locs.length - 1))];
-    // orders each food
-    for (let food of foods) {
-        call(storeThatServes(food));
-        placeOrder(food, qty, date.tony.birthday);
-        pay(card === "regina's card");
-    }
-    // filters guests
-    let guestsToInvite = [];
-    for (let potentialGuest of Guests) {
-        if (tonyRating(porentialGuest) > 17) {
-            guestsToInvite.push(potentialGuest);
-        } else {
-            // not necesary but nice to let them know at least
-            call(potentialGuest).andSay(`Tony doesn't like you that much`);
-        }
-    }
-    invite(guestsToInvite, location, date);
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Rebus Class /////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////// 
-// class to hold all rebus objects
-
-class Rebus {
-    constructor(img, fileName, index) {
-        this.index = index; // stores originally loaded index, useful once rebus order is randomized
-        this.fileName = fileName; // for image, including extension
-        let splitFileName = split(fileName, '/'); // splits full path by folders (aka by backslasshes)
-        let rebusNameWithExtensionAndPrefix = splitFileName[splitFileName.length - 1]; // grabs just rebus name, which is the last portion of the file path
-        let rebusNameWithPrefix = split(rebusNameWithExtensionAndPrefix, '.')[0]; // removes file extension
-        this.name = rebusNameWithPrefix.substring(6); // remove '_rebus' prefix, saves just name (category) and number
-        this.image = img; // .jpg
-
-        // topleft corner of where the rebus will be drawn from
-        //TODO: Refactor this to use a 2d vector object instead of 2 variables
-        this.xLoc = -240; // sets initial location off the canvas, so it can't accidentally be picked up by isHovered()
-        this.yLoc = -240;
-
-        this.active = false; // is thie currently the active (clicked on) rebus?
-        this.solved = false; // has this rebus been solved?
-        this.showHints = false;
-        this.incorrectAnimationTimer = 0; // used to animate red rectangle when rebus is answeres incorrectly
-        this.hoverDuration = 0;  // used to know how long the mouse/finger has been hovered over this rebus, used for time-delayed animations
-
-        // each rebus can fit into multiple categores
-        this.category = rebusDataTable.getString(index, 'category');
-        this.subCategory = rebusDataTable.getString(index, 'subCategory');
-        this.secondCategory = rebusDataTable.getString(index, 'secondCategory');
-        this.secondSubCategory = rebusDataTable.getString(index, 'secondSubCategory');
-        this.hint1 = rebusDataTable.getString(index, 'hint1');
-        this.hint2 = rebusDataTable.getString(index, 'hint2');
-        this.hint1Active = false;
-        this.hint2Active = false;
-        this.hint1Viewed = false; // true if hint1 has been viewed by user
-        this.hint2Viewed = false; // true if hint2 has been viewed by user
-        this.numOfHints = 0;  // records total number of hints this rebus hasOwnProperty
-        // calculates number of hints this rebus has, and stores it in object variable (if a string is null (aka - there is no hint entered in the data table)) then the conditional evaluates to false, otherwise it's true
-        if (this.hint1) { this.numOfHints += 1; }
-        if (this.hint2) { this.numOfHints += 1; }
-        // answer that is accepted and displayed once rebus is solved
-        this.answer = rebusDataTable.getString(index, 'answer');
-        // list of all other possible accepted (but never displayed) answered
-        this.alternateAnswers = [];
-        //for loop to populated alternateAnswers list from data table
-        for (let i = 0; i < 15; i++) {
-            if (rebusDataTable.getString(index, 'alternateAnswer' + (i + 1))) { // if that alternat eanswer exists...
-                this.alternateAnswers.push(rebusDataTable.getString(index, 'alternateAnswer' + (i + 1))); // add it to the alternate answers list array
-                //         print(i + ' ' + this.alternateAnswers[i]);
-            } else { i = 15; }  // ends the loop if you've reached the end of the alternate answers for this rebus
-        }
-        //     print(this.alternateAnswers);
-        // hints available to user if they cannot solve (but will incur point deduction somehow)
-        this.hint1 = rebusDataTable.getString(index, 'hint1');
-        this.hint2 = rebusDataTable.getString(index, 'hint2');
-    }
-
-    /**
-     * Extracts the name of this rebus from the given file name
-     * Example: fileName: "data/images/rebus_architecture_00.jpg" --> becomes "architecture_00"
-     * @param {string} fileName file name parat
-     * @returns {string} rebus name
-     */
-    getRebusNameFromFileName(fileName) {
-        let splitFileName = split(fileName, '/'); // splits full path by folders (aka by backslasshes)
-        let rebusNameWithExtensionAndPrefix = splitFileName[splitFileName.length - 1]; // grabs just rebus name, which is the last portion of the file path
-        let rebusNameWithPrefix = split(rebusNameWithExtensionAndPrefix, '.')[0]; // removes file extension
-        let name = rebusNameWithPrefix.substring(6); // remove '_rebus' prefix, saves just name (category) and number
-        return name;
-    }
-
-
-
-    // draws this rebus to the screen
-    drawRebus(x, y) {
-        this.xLoc = x;  // top left corner to start drawing rebus
-        this.yLoc = y;  // top left corner to start drawing 
-        //     print(`${this.xLoc}, ${this.yLoc}`);
-        // keeps track of how long the rebus has been hovered over
-        this.incrimentHoverTimer();
-        // draws rebus
-        image(this.image, this.xLoc, this.yLoc, rebusWidthCurrent, rebusWidthCurrent);
-        // draws red rectangle if an incorrect guess was recently entered
-        if (this.incorrectAnimationTimer > 0 && desktopMode) {
-            noStroke();
-            fill(255, 0, 0, this.incorrectAnimationTimer)
-            rect(this.xLoc + 1, this.yLoc + 1, rebusWidthCurrent - 2, rebusWidthCurrent - 2, 5);  // '-1' prevents the red from appearing outsid ethe active rebus outline...
-            this.incorrectAnimationTimer -= 2;
-        }
-        // draws rebus differently if it's 'active' aka been clicked on
-        // mobile mode active rebuses are drawn on top of everything else, through another function in the draw() loop
-        if (this.active) {
-            // draws outline rectangle
-            stroke(217);
-            strokeWeight(3);
-            noFill();
-            // screens out the rebus image IF user if the rebus's hint menu is currently active && their not using a mobile device
-            if (this.showHints && desktopMode) {
-                fill(0, (255 * 0.75));
-            }
-            rect(this.xLoc + 2, this.yLoc + 2, rebusWidthCurrent - 4, rebusWidthCurrent - 4, 5);  // +2 & -4 requried so outline doesn't got outside canvas and get slightly cutoff
-            // draws input text box, location based on the rebus's X & Y location in desktop mode
-            drawTextInputBox(this.xLoc, this.yLoc);
-            // draws hint button(s), screen, and hint text
-            this.drawHintButtons();
-        }
-        // if mouse is hovered of a rebdeaus && it's not the active rebus... (only on desktop mode)
-        if (this.isHovered() && !this.active && desktopMode && !this.solved && currentMode === 'rebusMode') {
-            // draws translucent white rectangle over hovered rebus to slightly dim it's appearance
-            fill(255, 150);
-            noStroke(1);
-            rect(this.xLoc, this.yLoc, rebusWidthCurrent, rebusWidthCurrent, 5);
-        }
-        // if this rebus has been solved, draw green rectangle over it
-        if (this.solved) {
-            noStroke();
-            fill(0, 255, 0, 25); // green transparent fill
-            if (this.hint1Viewed || this.hint2Viewed) { // if either hint has been used
-                fill(100, 255, 25, 25);  // use green/yellow transparent fill instead
-            }
-            if (this.hint1Viewed || this.hint2Viewed) { // if both hints has been used
-                fill(150, 200, 50, 25);  // use yellow/green transparent fill instead
-            }
-            rect(this.xLoc + 1, this.yLoc + 1, rebusWidthCurrent - 2, rebusWidthCurrent - 2);
-        }
-    }
-
-    drawHintButtons() {
-        // sets location of hint button (relative to the active rebus's location on desktop mode)
-        if (desktopMode) {
-            let buttonSpacing = hintButton.r * 2.5;
-            let xOffset = rebusWidthCurrent * 0.075;
-            let yOffset = rebusWidthCurrent * 0.075;
-            hintButton.setLocation(this.xLoc + xOffset, this.yLoc + yOffset);
-            h1Button.setLocation(this.xLoc + xOffset, this.yLoc + yOffset + buttonSpacing);
-            h2Button.setLocation(this.xLoc + xOffset, this.yLoc + yOffset + (buttonSpacing * 2));
-        } else
-            // hint button location is fixed in mobile mode, based on the device's screen/window dimensions
-            if (mobileMode && aRebusIsCurrentlyActive) {
-                hintButton.r = closeButton.r; // make hintButton match the radius of closeButon (so they're the same size);
-                hintButton.setLocation(width - (rebusWidthCurrent / 4), (10 + hintButton.r) * 2.6); // sets location of hint button on mobile screens (top left, opposite of close button)
-            }
-        // determines opacity of first hint button, based on proximity of mouse (desktop mode only)
-        if (desktopMode) {
-            let d = dist(mouseX, mouseY, hintButton.x, hintButton.y);
-            let opacity = 0;
-            let proximity = rebusWidthCurrent / 2;
-            if (d < proximity || this.showHints) {  // if the mouse is close to the hint button, OR showHint mode is turned on (aka the hint button was clicked and "hintmode' (hints are currently being shown) is on)
-                opacity = map(d, 0, proximity, 255, 0);
-                if (this.showHints) { opacity = 255; }  // if the hint button is clicked on before the button-fade-in is complete, finish the fade in by setting the opacity to 255
-                hintButton.opacity = opacity;
-                // draws main hint button
-                hintButton.draw();
-            }
-        }
-        // if the hint button has been clicked on...
-        if (this.showHints && desktopMode) {
-            // draws the number of hints used, and all the hints and their buttons
-            let usedHints = this.numOfHintsUsed();
-            let hintTextXLoc;
-            let hintTextYLoc;
-            noStroke();
-            // position & formatting of hints remaining text on desktop mode
-            fill(192);
-            textAlign(LEFT);
-            textSize(12);
-            hintTextXLoc = this.xLoc + (0.15 * rebusWidthCurrent);
-            hintTextYLoc = this.yLoc + (0.105 * rebusWidthCurrent);
-            text('Hints: ' + usedHints + ' / ' + this.numOfHints, hintTextXLoc, hintTextYLoc);
-            if (this.numOfHints > 0) { h1Button.draw(); }
-            if (this.numOfHints > 1) { h2Button.draw(); }
-        }
-    }
-
-    // returns true if the mouse is hovered of this rebus
-    isHovered() {
-        let bool = false;
-        // checks mouse X & Y location (relative to canvas) against location at which rebus is drawn
-        if (mouseX > this.xLoc && mouseX < this.xLoc + rebusWidthCurrent &&
-            mouseY > this.yLoc && mouseY < this.yLoc + rebusWidthCurrent) {
-            bool = true;
-        }
-        return bool;
-    }
-
-    // keeps track of how long the rebus has been hovered over
-    incrimentHoverTimer() {
-        if (this.isHovered()) {
-            this.hoverDuration += 1;
-        } else {
-            // resets hover counter if mouse is no longer over this rebus
-            this.hoverDuration = 0;
-        }
-    }
-
-    // returns number of hints that have been used
-    numOfHintsUsed() {
-        let x = 0;
-        if (this.hint1Viewed) {
-            x += 1;
-        }
-        if (this.hint2Viewed) {
-            x += 1;
-        }
-        return x;
-    }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// round button Class //////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////// 
-// round buttons used for closing windows and hints and more....
-
-class ButtonRound {
-    constructor(x, y) {
-        this.r = floor(0.07 * rebusWidthCurrent);  // default button Radius
-        if (mobileMode) { this.r *= 2; }  // default mobile radius
-        this.xStrokeLength = 0.6 * this.r;
-        if (x && y) { // if constructor was provided with both an x & y value...
-            this.x = x;
-            this.y = y;
-        } else
-            if (!x) { // if constructor recieved no values
-                // defaults location to off the screen
-                this.x = -this.r * 2;
-                this.y = -this.r * 2;
-            }
-        this.char = 'X';  // default fill is an x
-        this.opacity = 255; // default opacity value
-        this.circleStrokeWeight = 1.5;  // default stroke weight of circle
-        this.circleStroke = 192; // defaul stroke color of circle
-        this.circleStrokeHover = 0;  // default stroke hover color of circle
-        this.circleFill = 255; // default stroke fill of circle
-        this.circleFillHover = 192;
-        this.circleNoFill = false;
-        this.charFill = 192; // default text fill color
-        this.charFillHover = 0; // default text fill color
-        this.textSize = 14; // default text size
-    }
-
-    // draws button
-    draw() {
-        // draws outer circle
-        stroke(this.circleStroke, this.opacity);
-        strokeWeight(this.circleStrokeWeight);
-        fill(this.circleFill, this.opacity);
-        if (this.isHovered()) {
-            stroke(this.circleStrokeHover, this.opacity);
-            fill(this.circleFillHover, this.opacity);
-        }
-        if (this.circleNoFill) {
-            noFill();
-        }
-        circle(this.x, this.y, 2 * this.r);
-        // draws text ('char') inside circle
-        noStroke();
-        textAlign(CENTER);
-        textSize(this.textSize);
-        fill(this.charFill, this.opacity);
-        if (this.isHovered()) {
-            fill(this.charFillHover, this.opacity);
-        }
-        // if the char is X, offsets the letter down just slightly so it fits better inside the circle
-        let yOffset = 0;
-        if (this.char === 'X') {
-            yOffset = this.r * (1 / 8);
-            if (mobileMode) { yOffset -= 1; }
-        }
-        text(this.char, this.x, this.y + (this.r / 2) + yOffset);
-    }
-
-    // sets location (x & y of center of button)
-    setLocation(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    // sets the style for the button based on string argument
-    setStyle(str) {
-        //     print(`running setStyle on ${this.char}, style = ${str}`);
-        if (str === 'hintButtonActive') {
-            this.circleStrokeWeight = 1.5;
-            this.circleStroke = 192;
-            this.circleStrokeHover = 255;
-            this.circleFill = 192;
-            this.circleFillHover = 192;
-            this.circleNoFill = false;
-            this.charFill = 255;
-            this.charFillHover = 255;
-            this.char = 'X';
-            return;
-        }
-        if (str === 'hintButtonInactive') {
-            this.circleFill = 255;
-            this.circleFillHover = 255;
-            this.circleStroke = 192;
-            this.circleStrokeHover = 0;
-            this.charFill = 192;
-            this.charFillHover = (192 / 2);
-            this.circleNoFill = false;
-            this.char = '?';
-            return;
-        }
-        if (str === 'h1or2ButtonActive') {
-            this.circleFill = 192;
-            this.circleFillHover = 192;
-            this.circleStroke = 255;
-            this.circleStrokeHover = 255;
-            this.charFill = 255;
-            this.charFillHover = 255;
-            this.circleNoFill = false;
-            if (mobileMode) {
-                this.circleStrokeWeight = 2;
-            }
-            return;
-        }
-        if (str === 'h1or2ButtonInactive') {
-            this.circleFillHover = 255;
-            this.circleStroke = 192;
-            this.circleStrokeHover = 255;
-            this.charFill = 192;
-            this.charFillHover = 255;
-            this.circleNoFill = true;
-            if (mobileMode) {
-                this.circleStrokeWeight = 2;
-            }
-            return;
-        }
-        if (str === 'h1or2ButtonInactiveViewed') {
-            this.circleFill = 192;
-            this.circleFillHover = 192;
-            this.circleStroke = 192;
-            this.circleStrokeHover = 255;
-            this.charFill = 255;
-            this.charFillHover = 255;
-            this.circleNoFill = false;
-            return;
-        }
-        if (str === 'closeButtonMobile') {
-            this.circleFill = 192;
-            this.circleFillHover = 192;
-            this.circleStroke = 192;
-            this.circleStrokeHover = 255;
-            this.charFill = 255;
-            this.charFillHover = 255;
-            this.circleStrokeWeight = 2;
-        }
-        if (str === 'hintButtonMobile') {
-            this.circleFill = 192;
-            this.circleFillHover = 192;
-            this.circleStroke = 192;
-            this.circleStrokeHover = 255
-            this.charFill = 255;
-            this.charFillHover = 255;
-            this.circleStrokeWeight = 2;
-        }
-        if (str === 'hintButtonMobileNoHints') {
-            this.circleNoFill = true;
-            this.charFill = 192;
-            this.circleStroke = 192;
-            this.circleStrokeWeight = 2;
-        }
-    }
-
-    // returns true if mouse is currently hovering over this rebus
-    isHovered() {
-        if (dist(mouseX, mouseY, this.x, this.y) <= this.r) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// rectangular button Class ////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////// 
-// used for confirmation of clear data, and taht's it so far...
-
-class ButtonRectangular {
-    constructor(t) {
-        this.w = 100; // width (px)
-        this.h = 20;  // height (px)
-        this.x = -this.w; // x location (top-left) - defaults button to display offscreen
-        this.y = -this.h; // y location (t)op left) - defaults button to display offscreen
-        this.t = t; // text to display inside button
-    }
-
-    // draws button
-    draw() {
-        // draws outer circle
-        stroke(192);
-        strokeWeight(1.5);
-        fill(255);
-        if (this.isHovered()) {
-            stroke(0);  // makes button black if mouse if hovered
-        }
-        rect(this.x, this.y, this.w, this.h, 5);
-        // draws text
-        textAlign(CENTER);
-        noStroke();
-        fill(192);
-        if (this.isHovered()) {
-            fill(0);  // makes button black if mouse if hovered
-        }
-        textSize(14)
-        if (mobileMode) { textSize(24); }
-        text(this.t, this.x + (this.w / 2), this.y + (this.h / 2) + 4); // 7 = textSize / 2
-    }
-
-    // sets location (x & y of center of button)
-    setLocation(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    // sets the button's width and height
-    setSize(w, h) {
-        this.w = w;
-        this.h = h;
-    }
-
-    // returns true if mouse is currently hovering over this button
-    isHovered() {
-        if (mouseX > this.x && mouseX < this.x + this.w &&
-            mouseY > this.y && mouseY < this.y + this.h) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// scroll button arrow class ///////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////// 
-// used on desktop mode for clickable scrollup and scroll down buttons
-
-// scroll up and down arrows for desktop mode
-class ScrollButton {
-    constructor(dir) {
-        this.direction = dir;
-        // size of arrow containing box
-        this.arrowWidth = 50;
-        this.arrowHeight = 10;
-        this.opacity = 0;
-        this.opacityTimer = 0;
-        this.setValues(); // sets values used to draw arrow
-        this.topY;
-        this.bottomY;
-    }
-
-    setValues() {
-        this.pointY;  // y value of point of arrow
-        this.dir = 1; // direction of arrow multiplication vector
-        if (this.direction === 'up') {
-            this.pointY = 10;
-            this.topY = this.pointY;
-            this.bottomY = this.topY + this.arrowHeight;
-        } else
-            if (this.direction === 'down') {
-                this.pointY = height - 10;
-                this.dir *= -1; // allows me to use same formula below to make both up and down arrow vectors
-                this.bottomY = this.pointY;
-                this.topY = this.bottomY - this.arrowHeight;
-            }
-    }
-
-    draw() {
-        // styles arrow
-        strokeWeight(2.5);
-        noFill();
-        let distToMouse = dist(mouseX, mouseY, width / 2, this.pointY);
-        // if mouse is not close to button, and the rebuses haven't been recently scrolled (opacityTimer)...
-        if (this.opacityTimer <= 0 && distToMouse > rebusWidthCurrent / 2) {
-            return; // don't draw the arrow, and end the function here
-        }
-        // maps opactiy based on distance to mouse
-        this.opacity = map(distToMouse, 0, rebusWidthCurrent / 2, (255 * 0.5), 0);
-        // if the opacity timer is not active...
-        if (this.opacityTimer <= 0) {
-            // set the opacity based on distance only
-            stroke(0, this.opacity);
-        } else
-            // if the opacity time is active...
-            if (this.opacityTimer > 0) {
-                // use whichever is darker to set the opacity, but continue to incrimentally decrease the opacity timer
-                stroke(0, max(this.opacity, this.opacityTimer));
-                this.opacityTimer -= 5;
-            }
-        if (this.isHovered()) {
-            stroke(0, 255);
-        }
-        // draws arrow
-        beginShape();
-        vertex(width / 2 - this.arrowWidth / 2, this.pointY + this.dir * this.arrowHeight);
-        vertex(width / 2, this.pointY);
-        vertex(width / 2 + this.arrowWidth / 2, this.pointY + this.dir * this.arrowHeight);
-        endShape();
-    }
-
-    // returns true if mosue is currently hovered over this arrow, otherwise returns false
-    isHovered() {
-        let bool = false;
-        if (mouseX > width / 2 - (this.arrowWidth / 2 - 5) &&
-            mouseX < width / 2 + (this.arrowWidth / 2 + 5) &&
-            mouseY > this.topY - 5 &&
-            mouseY < this.bottomY + 5) {
-            bool = true;
-        }
-        return bool;
-    }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// scroll bar Class ////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////// 
-// draws scroll bar, and can be clicked on and dragged to scroll quickly
-
-// scroll bar objects
-class ScrollBar {
-    constructor() {
-        this.h;  // current height of scroll bar
-        this.p; // current vertical position of center of scroll bar
-        this.pClicked;
-        this.startingYClicked;
-        this.x;  // horizontal position\
-        this.buffer = 5;
-        this.topBound;
-        this.bottomBount;
-        this.strokeWeight = 5;
-        this.opacity = 0;  // opacity of scroll bar
-        this.opacityTimeout = 0; // time delaye before scrollbar fades away
-        this.clicked = false; // true if the scroll bar is currently clicked on
-        // calculates initial position upon initialization
-        this.calcLen();
-        this.calcPos();
-    }
-
-    // calculates height of scrollbar based on canvas height, num of rebueses in current category, and a min and max size value
-    calcLen() {
-        let hMin = 40;
-        let hMax = rebusWidthCurrent;
-        this.h = height * (numOfRowsThatFitOnscreen / (filteredRebusIndices.length / 3));
-        if (this.h > hMax) { this.h = hMax; }
-        if (this.h < hMin) { this.h = hMin; }
-    }
-
-    // calculates current position of scrollbar
-    calcPos() {
-        this.x = width - this.buffer;
-        this.topBound = this.h / 2 + this.buffer;
-        this.bottomBound = height - ((this.h / 2) + this.buffer);
-        this.p = map(startingY, 0, -(numOfRows - 1) * rowHeight, this.topBound, this.bottomBound);
-    }
-
-    // draws scroll bar
-    draw() {
-        //     print(this.x + ', ' + this.p);
-        // increases opacity while rebuses are scrollling
-        if (currentlyScrolling && this.opacity <= 255) {
-            this.opacity += 8;
-            this.opacityTimeout = 0;
-        } else
-            // decreses opacity after scrolling is finished, with a slight delay
-            if (!currentlyScrolling && this.opacity > 0) {
-                if (this.opacityTimeout < 30) {
-                    this.opacityTimeout++;
-                } else {
-                    this.opacity -= 8;
-                }
-            }
-        // calculates opacity due to mouse proximity
-        let distFromMouseOpacity = 0;
-        if (this.distToMouse() < 100) {
-            distFromMouseOpacity = map(this.distToMouse(), 0, 100, 255, 0);
-        }
-        // if scrolling (or recently scrolled - due to opacity) OR if mouse is nearby, draw the scroll bar
-        if (this.opacity > 0 || this.distToMouse() < 100) {
-            this.calcLen(); // calculates length (doesn't need to be done every frame probably)
-            this.calcPos(); // calculates vertical position
-            // sets styles
-            noFill();
-            let o = max(this.opacity, distFromMouseOpacity); // opacity is equal to the darker value of scrolling or mouse proximity
-            stroke(192, o);
-            strokeWeight(this.strokeWeight);
-            // if scrollbar is currently clicked on and being dragged...
-            if (this.clicked) {
-                let upperLimit = 0;
-                let lowerLimit = -((numOfRows - 1) * rowHeight);
-                let mouseDraggedAmount = this.pClicked - mouseY;  // distance mouse has been moved since it was clicked, ie. scroll by that much, proportional by number of rows to canvas height
-                mouseDraggedAmount = map(mouseDraggedAmount, 0, height - this.h, upperLimit, lowerLimit); // top of initial range subtracts this.h to adjust for height of scroll bar (half height at bottom naf half height at top)
-                startingY = this.startingYClicked - (mouseDraggedAmount);
-                if (startingY > upperLimit) startingY = upperLimit;
-                if (startingY < lowerLimit) startingY = lowerLimit;
-                this.opacity = 255;
-                stroke(0);
-            }
-            // if on a desktop device, draws one (clickable) scrollbar on right side
-            if (desktopMode) {
-                line(this.x, this.p + (this.h / 2), this.x, this.p - (this.h / 2));
-            } else
-                // if on a mobile device, draws a line on both sides, non clickable
-                if (mobileMode) {
-                    fill(192, o);
-                    noStroke();
-                    rect(0 - this.strokeWeight / 2, this.p - (this.h / 2), this.strokeWeight, this.h, 3);
-                    rect(width - this.strokeWeight / 2, this.p - (this.h / 2), this.strokeWeight, this.h, 3);
-                }
-        }
-    }
-
-    // returns true if mouse is currently hovered over scroll bar
-    isHovered() {
-        if (mouseX > this.x - this.strokeWeight / 2 &&
-            mouseX < width &&
-            mouseY > this.p - this.h / 2 &&
-            mouseY < this.p + this.h / 2) {
-            return true;
-        } else return false;
-    }
-
-    //returns the shortest distance from the mouse to the scroll bar
-    distToMouse() {
-        let d;
-        let yTop = this.p - this.h / 2; // y value at top of scroll bar
-        let yBottom = this.p + this.h / 2;  // y value at bottom of scroll bar
-        if (mouseY < yTop) {  // if mouse is above top of scroll bar...
-            d = dist(this.x, yTop, mouseX, mouseY);
-        } else if (mouseY < yBottom) {  // if mouse is horizontal from scroll bar...
-            d = abs(this.x - mouseX);
-        } else { // if mouse is below scrollbar...
-            d = dist(this.x, yBottom, mouseX, mouseY)
-        }
-        return d;
-    }
-
-    // called once every time the scroll bar is clicked on
-    clickedOn() {
-        print('scroll bar clicked on');
-        this.clicked = true;
-        this.pClicked = mouseY;
-        this.startingYClicked = startingY;
-    }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// PastTouch ///////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////// 
-// object used to record the location and time of a previous touch point
-// used to calculate swiping velocity & direciton
-
-class PastTouch {
-    constructor(x, y) {
-        this.time = frameCount; // records frame when this touch position was registered
-        this.position = createVector(x, y); // vector to save x and y location of past touch
-    }
 }
 
 //#region UNIT TEST
@@ -3632,7 +3045,7 @@ class PastTouch {
 /** Holds and runs all unit tests within! */
 function runAllUnitTests() {
 
-    let unitTests = new UnitTestExecutor();
+    let unitTests = new UnitTestRunner();
 
     // test 1
     unitTests.executeTest(
@@ -3661,89 +3074,10 @@ function runAllUnitTests() {
     );
 
 
-    newpage = window.open('unitTestResults.html');
+    newpage = window.open('unitTesting/unitTestResults.html');
     let str = unitTests.getFormattedTestResults();
     //TODO: get this working better, not just with 'document.write' but actually add DOM elements to the body of the new test result page...
     newpage.document.write(str);
-}
-
-//TODO: Add exception handling!
-/** Class to execute unit tests, and record and display their results */
-class UnitTestExecutor {
-    constructor() {
-        /** List to hold all unit test result objects 
-         @type {UnitTestResult} */
-        this.testResults = [];
-    }
-
-    /** Reutns a html string (with tags) describing the test results of all run tests */
-    getFormattedTestResults() {
-        let formattedTestResults = "<h1>Unit Test Results</h1>";
-        formattedTestResults += this.getTestSummary();
-        let previousTestGroupName;
-        for (let testResult of this.testResults) {
-            // starts new group header
-            if (testResult.testGroupName != previousTestGroupName)
-                formattedTestResults += "<h3>" + testResult.testGroupName + "</h3>";
-            previousTestGroupName = testResult.testGroupName;
-            // adds line for test result for that test
-            if (!testResult.passed) {
-                formattedTestResults += '<p style = "color:red;font-weight:bold;">';
-            }
-            else {
-                formattedTestResults += '<p>';
-            }
-            formattedTestResults += testResult.testName + "::" + testResult.getPassOrFailText() + "</p>";
-            if (!testResult.passed) {
-                formattedTestResults += "<p>&emsp;Expected Result: " + testResult.expectedResult + "</p>"
-                formattedTestResults += "<p>&emsp;Actual Result: " + testResult.actualResult + "</p>"
-            }
-        }
-
-        return formattedTestResults;
-    }
-
-    /** Returns an html <p> string representing how many tests were run and passed (example: '<p>9/10 tests passed</p>') */
-    getTestSummary() {
-        let numOfTestsRun = this.testResults.length;
-        let numOfTestsPassed = 0;
-        for (let testResult of this.testResults) {
-            if (testResult.passed)
-                numOfTestsPassed++;
-        }
-        return "<p>Total Tests Passed: " + numOfTestsPassed + "/" + numOfTestsRun + "</p>";
-    }
-
-    /**
-     * Executes the given test method and records the results
-     * @param {string} testGroupName name of group this unit test should belong to
-     * @param {string} testName name of the specific unit test, basically describing what it does and/or what method it's testing
-     * @param {any} testMethod actual function that will produce the actual result fromt the test
-     * @param {any} expectedResult expected result from the test method in the previous argument, will be compared to this with '==' operator.
-     */
-    executeTest(testGroupName, testName, testMethod, expectedResult) {
-        let actualResult = testMethod(); // run given test method
-        let passed = expectedResult == actualResult; // deteminer whether actual result matched the expected
-        // create a new unit test result object to store this test's results
-        let testResult = new UnitTestResult(testGroupName, testName, passed, expectedResult, actualResult);
-        this.testResults.push(testResult); // add this test result to this classes's list of test results
-    }
-}
-
-/** Object representing the results from a single unit tests */
-class UnitTestResult {
-    constructor(testGroupName, testName, passed, expectedResult, actualResult) {
-        this.testGroupName = testGroupName;
-        this.testName = testName;
-        this.passed = passed;
-        this.expectedResult = expectedResult;
-        this.actualResult = actualResult;
-    }
-
-    /** Returns a string representation of the 'passed' boolean (Ex: "Passed!" or "Failed!") */
-    getPassOrFailText() {
-        return this.passed ? 'Passed!' : 'Failed';
-    }
 }
 
 //#endregion UNIT TEST
