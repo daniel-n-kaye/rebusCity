@@ -30,7 +30,7 @@ class ButtonRectangular {
             fill(0);  // makes button black if mouse if hovered
         }
         textSize(14)
-        if (mobileMode) { textSize(24); }
+        if (isMobileMode()) { textSize(24); }
         text(this.t, this.x + (this.w / 2), this.y + (this.h / 2) + 4); // 7 = textSize / 2
     }
 

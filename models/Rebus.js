@@ -82,7 +82,7 @@ class Rebus {
         // draws rebus
         image(this.image, this.xLoc, this.yLoc, rebusSizeCurrent, rebusSizeCurrent);
         // draws red rectangle if an incorrect guess was recently entered
-        if (this.incorrectAnimationTimer > 0 && desktopMode) {
+        if (this.incorrectAnimationTimer > 0 && isDesktopMode()) {
             noStroke();
             fill(255, 0, 0, this.incorrectAnimationTimer)
             rect(this.xLoc + 1, this.yLoc + 1, rebusSizeCurrent - 2, rebusSizeCurrent - 2, 5);  // '-1' prevents the red from appearing outsid ethe active rebus outline...
@@ -96,7 +96,7 @@ class Rebus {
             strokeWeight(3);
             noFill();
             // screens out the rebus image IF user if the rebus's hint menu is currently active && their not using a mobile device
-            if (this.showHints && desktopMode) {
+            if (this.showHints && isDesktopMode()) {
                 fill(0, (255 * 0.75));
             }
             rect(this.xLoc + 2, this.yLoc + 2, rebusSizeCurrent - 4, rebusSizeCurrent - 4, 5);  // +2 & -4 requried so outline doesn't got outside canvas and get slightly cutoff
@@ -106,7 +106,7 @@ class Rebus {
             this.drawHintButtons();
         }
         // if mouse is hovered of a rebdeaus && it's not the active rebus... (only on desktop mode)
-        if (this.isHovered() && !this.active && desktopMode && !this.solved && currentMode === 'rebusMode') {
+        if (this.isHovered() && !this.active && isDesktopMode() && !this.solved && currentState === States.rebusMode) {
             // draws translucent white rectangle over hovered rebus to slightly dim it's appearance
             fill(255, 150);
             noStroke(1);
@@ -128,7 +128,7 @@ class Rebus {
 
     drawHintButtons() {
         // sets location of hint button (relative to the active rebus's location on desktop mode)
-        if (desktopMode) {
+        if (isDesktopMode()) {
             let buttonSpacing = hintButton.r * 2.5;
             let xOffset = rebusSizeCurrent * 0.075;
             let yOffset = rebusSizeCurrent * 0.075;
@@ -137,12 +137,12 @@ class Rebus {
             h2Button.setLocation(this.xLoc + xOffset, this.yLoc + yOffset + (buttonSpacing * 2));
         } else
             // hint button location is fixed in mobile mode, based on the device's screen/window dimensions
-            if (mobileMode && isARebusIsCurrentlyActive) {
+            if (isMobileMode() && isARebusIsCurrentlyActive) {
                 hintButton.r = closeButton.r; // make hintButton match the radius of closeButon (so they're the same size);
                 hintButton.setLocation(width - (rebusSizeCurrent / 4), (10 + hintButton.r) * 2.6); // sets location of hint button on mobile screens (top left, opposite of close button)
             }
         // determines opacity of first hint button, based on proximity of mouse (desktop mode only)
-        if (desktopMode) {
+        if (isDesktopMode()) {
             let d = dist(mouseX, mouseY, hintButton.x, hintButton.y);
             let opacity = 0;
             let proximity = rebusSizeCurrent / 2;
@@ -155,7 +155,7 @@ class Rebus {
             }
         }
         // if the hint button has been clicked on...
-        if (this.showHints && desktopMode) {
+        if (this.showHints && isDesktopMode()) {
             // draws the number of hints used, and all the hints and their buttons
             let usedHints = this.numOfHintsUsed();
             let hintTextXLoc;

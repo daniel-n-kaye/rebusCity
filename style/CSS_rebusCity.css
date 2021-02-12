@@ -55,7 +55,7 @@ select {
     border: 1.5px solid #c0c0c0;
     border-radius: 5px;
     background-color: white;
-    background-image: url("data/dropdownArrowGrey.png");
+    background-image: url("../data/dropdownArrowGrey.png");
     background-repeat: no-repeat;
     background-size: contain;
     background-position: right;
@@ -68,7 +68,7 @@ select {
 
     select:hover {
         border-color: black;
-        background-image: url("data/dropdownArrowBlack.png");
+        background-image: url("../data/dropdownArrowBlack.png");
     }
 
     select:focus {
@@ -102,7 +102,7 @@ option {
     position: absolute;
     opacity: 0.25;
     background-color: white;
-    background-image: url("data/instagramIcon.png");
+    background-image: url("../data/instagramIcon.png");
     background-repeat: no-repeat;
     background-size: 20px, 20px;
 }

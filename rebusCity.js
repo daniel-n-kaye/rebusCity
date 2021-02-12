@@ -146,6 +146,7 @@
 //  -fix 'x' button for all about/hint/contact windows = use two lines instead of an 'x' charecter, becaues often it's not centered, and the font could change!
 //  -namespace all p5 variables
 //  -Convert lost of simple x/y postion vectors to my own 2dposition class! (then they'll show up in intellisense, and if i dont' need all the extra data/properties taht come with a p5.vector object, why use em? I can easily switch it out anytime to, just by changing the point where it's constructed, as long as i keep the .x and .y syntax the same!)
+//  -refactor all stat variables into a (view) model (see todo comments in that area!)
 
 // #endregion TODO
 
@@ -256,10 +257,9 @@ let spacingBetweenRebusesCurrent = 25;
 let activeRebusSizeMobile = rebusSizeCurrent * 2;
 
 /** Position (px) of top-left corner of active rebus image when drawing on mobile mode.
- * (initizliaed in setup, but actually set in the 'resize' function, because
- * it's based off of the browser's screen size
- * (type: p5.Vector) */
-let activeRebusPositionMobile;
+ *  x value doesn't matter, it will be set in the 'resize' funtion(s), based off of the browser's screen size
+ * @type {XYPosition} */
+let activeRebusPositionMobile = new XYPosition(0, 10);
 
 /** Stores the number of full rebuses that fit on the current screen.
  * Recalculated every time window is resized.
@@ -285,9 +285,9 @@ let numOfRows;
 const textBoxHeightMobile = 40;
 
 /** Location (px) of top-left corner of input text box on mobile devices.
- * Initialized in window resize functions because it's based on screen width
- * (type: p5.Vector) */
-let textBoxPositionMobile;
+ *  It's initial values don' tmatter, they will be set based on the screen size in the 'screen resized' functions
+ * @type {XYPosition} */
+let textBoxPositionMobile = new XYPosition(0, 0);
 
 //#endregion GLOBAL VARIABLES - INPUT TEXT BOX PROPERTIES
 
@@ -318,12 +318,14 @@ let scrollRate = 0;
 let startingYValueWhenTouchStarted;
 
 /** x,y position at which the current touch/swipe started
- * (type: p5.Vector) */
-let touchStartedPosition;
+ * Initial values don't matter, they will be reset as soon as a touch is started
+ * @type {XYPosition} */
+let touchStartedPosition = new XYPosition(0,0);
 
 /** x,y position at which the current touch/swipe ended
- * (type: p5.Vector) */
-let touchEndedPosition;
+ * Initial values don't matter, they will be reset as soon as a touch is ended
+ * @type {XYPosition} */
+let touchEndedPosition = new XYPosition(0, 0);
 
 /** velocity in pixels / milisecond of current or last swipe
  * @type {number} */
@@ -337,65 +339,238 @@ let pastTouches = [];
 
 //#endregion GLOBAL VARIABLES - ANIMATION AND SCROLLING
 
-
+//#region GLOBAL VARIABLES - STATES
 //! keep track of what type of device is being used
 //  this way various functions can query this without using the media query and other checks used in the 'windowResized' function
 //  also, toggled by the 'windowResized' function
-let desktopMode = true;
-let mobileMode = false;
+
+//TODO: fix how enum types are represened in intellisense preview...
+/** Enum representing what screen modes rebus city can be in.
+ * Right now only two options: desktop or mobile */
+const ScreenModes = Object.freeze({
+    "desktopMode": 1,
+    "mobileMode": 2
+});
+
+/** Current screen mode that this rebus city script is set to
+ * @type {ScreenModes} */
+let screenMode = ScreenModes.desktopMode;
+
+/** Returns true if the screenMode is currently set to desktop mode */
+let isDesktopMode = () => screenMode === ScreenModes.desktopMode ? true : false;
+
+/** Returns true if the screenMode is currently set to mobile mode */
+let isMobileMode = () => screenMode === ScreenModes.mobileMode ? true : false;
 
 //! states - objects, only one can be active at a time, and that determains what's durrently being drawn
 //? Do i still even need this?
 //TODO:Refactor to be a sude javasript 'enum'
-//const desktopOrMobileModeEnum = Object.freeze({ "desktopMode": 1, "mobileMode": 2 });
 
-let currentMode = 'rebusMode';
+//TODO: fix how enum types are represened in intellisense preview...
+/** Enum representing the various states that rebus city can be in. */
+const States = Object.freeze({
+    "rebusMode": 1,
+    "statMode": 2,
+    "clearMode": 3,
+    "contactMode": 4,
+    "aboutMode": 5,
+    "loading": 6
+});
 
-//! buttons (objects) used throughout program
-let closeButton;  //  button with x used to close things
-let yesButton;  // rectangular button that says 'yes', used in confirming 'clear data'
-let noButton;  // rectangular button that says 'no', sed in confirming 'clear data'
-let hintButton; // circulat button with question mark that displays hints
-let scrollButtonUp; // fade-in scroll up arrow used in desktop mode
-let scrollButtonDown; // fade-in scroll down arrow used in desktop mode
-let scrollBar;  // scroll bar to incidate position, interactive on desktop mode
+/** The current state of the rebus city app.
+ * Basically, the mode is what is being displayed/active right now. Rebus mode shows all the interactive rebus puzzles, about mode shows the 'about' window, ect
+ *  @type {States} */
+//TODO: Use this and add a 'loading' state to replace 'loading' bool?
+let currentState = States.rebusMode;
 
-//! stat recording variables
-let numberOfCompletedRebuses = 0; // stores number of rebus puzzles that have been solved
-let numberOfCompletedRebusesWithoutHints = 0; // stores number of rebus puzzles solved before the user looked at that puzzle's hints
-let numberOfCompletedRebusesInCurrentCategory = 0; // stores number of rebus puzzles that have been solved in the current category
-let solvedRebusNames = []; // stores NAMES of solved rebuses
-let numberOfIncorrectGuesses = 0; // also used to calculate the 'worst guess yet' stat
-let numberOfHintsUsed = 0;  // counter to keep track of the number of hitns a user has used
+//#endregion GLOBAL VARIABLES - STATES
+
+//#region GLOBAL VARIALBES - BUTTONS
+
+// buttons (as objects) used throughout program.
+// Note, these are NOT DOM elements, just JS objects.
+
+/** button with x used to close things
+ * @type {ButtonRound} */
+let closeButton;
+
+/** rectangular button that says 'yes', used in confirming 'clear data'
+ * @type {ButtonRectangular} */
+let yesButton;
+
+/** rectangular button that says 'no', used in confirming 'clear data'
+ * @type {ButtonRectangular} */
+let noButton;
+
+/** circular button with question mark that displays hints
+ * @type {ButtonRound} */
+let hintButton;
+
+/** fade-in scroll up arrow used in desktop mode
+ * @type {ScrollButton} */
+let scrollButtonUp;
+
+/** fade-in scroll down arrow used in desktop mode
+ * @type {ScrollButton} */
+let scrollButtonDown;
+
+/** scroll bar to incidate vertical position in currently active rebus list, interactive on desktop mode
+ * @type {ScrollBar} */
+let scrollBar;
+
+//#endregion GLOBAL VARIALBES - BUTTONS
+
+//#region GLOBAL VARIABLES - USER STATS
+//TODO: refactor all these to be a view model? All can be fetchend whenever stats is opend, OR a rebus is solved, or whatever  instead of keeping track of each one, maybe on ebig function that is just 'refresh stats'
+
+//TODO: Refactor into get function from list of rebuses, maybe? so I don't ahve to keep updataing. But I don't want to slow down the frame rate either
+/** number of rebus puzzles that have been solved
+ *  @type {number} */ 
+let numberOfCompletedRebuses = 0;
+
+//TODO: refactor to 'get' function'?
+/** number of rebus puzzles the user solved without looking at their hints
+ *  @type {number} */
+let numberOfCompletedRebusesWithoutHints = 0;
+
+//TODO: refactor to 'get' function'?
+/** number of rebus puzzles that have been solved in the current category
+ *  @type {number} */
+let numberOfCompletedRebusesInCurrentCategory = 0;
+
+//TODO: refactor to 'get' function'?
+/** List of names of all solved rebuses (used for local storage i think, not the stats window)
+ *  @type {string[]} */ 
+let solvedRebusNames = [];
+
+/** Used to help calculate the 'worst guess yet' stat
+ *  @type {number} */
+let numberOfIncorrectGuesses = 0;
+
+//TODO: refactor to 'get' function'?
+/** number of hints a user has used
+ *  @type {number} */ 
+let numberOfHintsUsed = 0;
+
+//TODO: refactor to 'get' function'?
+/** category that the user has solved the most rebuses in, based on quantity (not %)
+ *  @type {string} */ 
 let strongestCategory = 'none yet';
-let worstGuessSoFar = 'none yet'; //stores user's 'worst' incorrect guess made so far
-let totalTimePlaying = 0;  // stores time, in seconds, the tab has been active
-let isTabActive = true; // true if the tab with this script is active
-let rebusSolvingRate; // time it's taken user to solve each puzzle, on average
-let rebusRanks = []; // array containing all rebus ranks
+
+/** user's 'worst' incorrect guess made so far
+ *  @type {string} */ 
+let worstGuessSoFar = 'none yet';
+
+/** stores time (in seconds) that this tab (in the browser) has been active.
+ * Stored in, and retrieved from, user's browser's local storage and cummulative over time.
+ *  @type {number} */ 
+let totalTimePlaying = 0;
+
+/** true if the tab with this script is active
+ *  @type {bool} */ 
+let isTabActive = true;
+
+//TODO: refactor to 'get' function'?
+/** time (seconds) it's taken user to solve each puzzle, on average
+ *  @type {number} */ 
+let rebusSolvingRate;
+
+/** array containing all rebus ranks.
+ * Loaded from csv file during setup
+ *  @type {string[]} */ 
+let rebusRanks = [];
+
+//TODO: refactor to 'get' function'?
+/** stringified list of which hints for which rebuses have been used.
+ * Used for saving to and loading from global storage (I think?)
+ *  @type {string[]} */ 
 let hintsUsed = [];
 
-//! DOM element variables, ordered from top to bottom
-// stored as p5.element objects so their CSS properties and events/inputs can be used in p5.js functions
-let navbar; // holds DOM navbar DIV elements
-let navbarHeightCurrent = 40; // stores current height of nav bar, updated based on size changes
-const navbarHeightDesktop = 40; // size of nav bar on desktop displays (px)
-const navbarHeightMobile = 120; // size of nav bar on mobile displays (px)
-let container;  // holds DOM div element that contains canvas and text input box
-let logo; // holds DOM element containing rebus city logo
-let instagramLinkContainer; // holds DOM <a> link element, links to @rebus.city instagram page
-let instagramLinkURL = 'https://www.instagram.com/rebus.city/'; // path to instagram page
-let instagramLinkIcon;  // holds DOM image element with isntagram logo
-let optionsMenu;  // holds DOM select menu of options
-let categoryMenu; // holds DOM select menu of rebus categories
-let textInputBox; // holds DOM input element used for entering possible rebus solutions
-let hintText; // holds DOM <p> element that contains and displays the hint string when needed
+//#endregion GLOBAL VARIABLES - USER STATS
+
+//#region GLOBAL VARIABLES - DOM ELEMENTS
+// All DOM elements created within this script
+// Stored as p5.element objects so their CSS properties and events/inputs can be used in p5.js functions
+// ordered here from 'top' to 'bottom' (sort of)
+
+/** DIV that contains all DOM navbar elements
+ * (type: p5.Element) */
+let navbar;
+
+/** current height of nav bar (px)
+ * updated based on the screen size, and whenever the screen size changes
+ * @type {numbers} */
+let navbarHeightCurrent = 40;
+
+/** height of nav bar when in desktop mode (px)
+ * @type {number} */
+const navbarHeightDesktop = 40;
+
+/** height of nav bar when in mobile mode (px)
+ * @type {number} */
+const navbarHeightMobile = 120; 
+
+/** <div> element that contains main canvas and text input box
+ * (type: p5.Element) */
+let container;
+
+/** <p> element containing rebus city logo
+ * (type: p5.Element) */
+let logo;
+
+/** <div> element, that conatins link element to @rebus.city instagram page
+ * (type: p5.Element) */
+let instagramLinkContainer;
+
+/** URL to rebus city instagram page
+ * @type {string} */
+const instagramLinkURL = 'https://www.instagram.com/rebus.city/';
+
+/** <a> element with istagram logo background, that linkes to @rebus.city instagram
+ * (type: p5.Element) */
+let instagramLinkIcon;
+
+/** <select> element containing dropdown options menu
+ * (type: p5.Element) */
+let optionsMenu;
+
+/** <select> element containing dropdown cateogry menu
+ * (type: p5.Element) */
+let categoryMenu;
+
+/** <input> element for entering rebus solution guesses
+ * (type: p5.Element) */
+let textInputBox;
+
+/** <p> element that contains and displays the hint string when needed
+ * (type: p5.Element) */
+let hintText;
+
+/** <canvas> element that contains entire p5.js sketch!
+ * (type: p5.Element) */
 let canvas; // holds DOM canvas element
-let footer; // holds DOM footer element
-const footerHeight = 20;  // height of DOM footer element
-let totalScoreP; // <p> dispalying current  number of rebuses solved
-let categoryScoreP; // <p> displaying current number of rebuses for current category solved
-let copyrightP; // <p> containing current copyright year
+
+/** <div> footer element
+ * (type: p5.Element) */
+let footer;
+
+/** height (px) of footer <div>
+ * @type {} */
+const footerHeight = 20;
+
+/** <p> element dispalying current number of rebuses solved
+ * (type: p5.Element) */
+let totalScoreP; //
+
+/** <p> element displaying current number of rebuses for current category solved
+ * (type: p5.Element) */
+let categoryScoreP;
+
+/** <p> element containing current copyright year, goes in footer
+ * @type {} */
+let copyrightP;
+
+//#endregion GLOBAL VARIABLES - DOM ELEMENTS
 
 //#endregion GLOBAL VARIABLES
 
@@ -436,8 +611,6 @@ function setup() {
     createCategories(); // creates category list
     // initializes Canvas of correct size (based on screen size), and ties DOM object to p5 variable
     initializeCanvas();
-    initializeActiveRebusMobilePosition();
-    initializeTextBoxMobilePosition();
     // creates all DOM elements and assigns them to p5. variables
     //TODO: group these all in one method
     createRanks();  // creates array of rebus ranks (for stats page) from table
@@ -483,7 +656,7 @@ function draw() {
         background(255);  // redraw white background (to cover up previous images)
         if (touches.length > 0) drag();  // moves rebuses based on finger draw, if finger is currently pressed
         drawRebuses();  // draws grid of rebuses
-        if (mobileMode && isARebusIsCurrentlyActive) { // if user is using a mobile device and one of the rebuses is active...
+        if (isMobileMode() && isARebusIsCurrentlyActive) { // if user is using a mobile device and one of the rebuses is active...
             drawActiveRebus();  // draw the active rebus
         }
         drawGUI();  // draws all graphic user interface objects
@@ -544,27 +717,27 @@ function mouseReleased() {
         return;
     }
     // closes stats or clear screen if they're open and it's close button was clicked
-    if (currentMode !== 'rebusMode' && closeButton.isHovered()) {
-        currentMode = 'rebusMode';
+    if (currentState !== States.rebusMode && closeButton.isHovered()) {
+        currentState = States.rebusMode;
         print('exited back to rebus mode');
         return;
     }
     // clears all data if user selects yes, exits the 'clear all data' window if user selects no
-    if (currentMode === 'clearMode') {  // if clear all data window is currently being drawn...
+    if (currentState === States.clearMode) {  // if clear all data window is currently being drawn...
         if (yesButton.isHovered()) {
             print('yes clicked');
             clearSavedData();
-            currentMode = 'rebusMode';
+            currentState = States.rebusMode;
             return;
         } else
             if (noButton.isHovered()) {
                 print('no clicked');
-                currentMode = 'rebusMode';
+                currentState = States.rebusMode;
                 return;
             }
     }
     // scrolls up or down if the up or down arrow was clicked on
-    if (desktopMode) {
+    if (isDesktopMode()) {
         if (scrollButtonDown.isHovered()) {
             scrollDown();
             return;
@@ -576,7 +749,7 @@ function mouseReleased() {
     // detects if the active rebuses's main 'hint' button has been clicked on, and toggles it between a '?' and a 'X', also toggles the visibility of the hint1 and hint2 buttons below it
     // if the hint button is clicked on and a rebus is currently active (to prevent next condition from having a null index)
     if (hintButton) { // ensures hint button exists before testing weather it is hovered over (ex: if someone clicks during loading, it may not have been initialized yet)
-        if (hintButton.isHovered() && isARebusIsCurrentlyActive && desktopMode) {
+        if (hintButton.isHovered() && isARebusIsCurrentlyActive && isDesktopMode()) {
             if (rebuses[activeRebusIndex].isHovered()) {  // and the active rebus is also hovered over]
                 print('clicked on hint button');
                 rebuses[activeRebusIndex].showHints = !rebuses[activeRebusIndex].showHints; // toggle the showHints property and then...
@@ -599,7 +772,7 @@ function mouseReleased() {
         }
     }
     // detects if main hint button has been pressed on mobile, and we are not currently hosinwg hints (prevents tapping on 'invisible' main hint button, which is in the same locaiton as the h1 button)
-    if (hintButton.isHovered() && isARebusIsCurrentlyActive && mobileMode && !rebuses[activeRebusIndex].showHints) {
+    if (hintButton.isHovered() && isARebusIsCurrentlyActive && isMobileMode() && !rebuses[activeRebusIndex].showHints) {
         print('touched hint button on mobile mode!');
         //     hintButton.setLocation(-hintButton.r, -hintButton.r); // hides '?' main hint button by setting it's location outside the canvas
         rebuses[activeRebusIndex].showHints = true; // in 'drawActiveRebus' this triggers hint1 & hint2 buttons to be drawn
@@ -649,7 +822,7 @@ function mouseReleased() {
     }
     // exits out of 'active rebus' display mdoe on a mobile device if the 'X' button is pressed
     // if an active rebus is being drawn on a phone, and the close button is pushed
-    if (mobileMode && isARebusIsCurrentlyActive && closeButton.isHovered()) {
+    if (isMobileMode() && isARebusIsCurrentlyActive && closeButton.isHovered()) {
         if (rebuses[activeRebusIndex].showHints) {
             print('exiting hint mode');
             hintText.hide();
@@ -663,23 +836,23 @@ function mouseReleased() {
         }
     }
     // deactivates active rebus on mobile if user taps in empty space next to the rebus
-    if (mobileMode && isARebusIsCurrentlyActive && !closeButton.isHovered()) {
+    if (isMobileMode() && isARebusIsCurrentlyActive && !closeButton.isHovered()) {
         if (touchedOutsideActiveRebus()) {
             deactivateAllRebuses();
         }
     }
     // if a rebus was clicked on, it sets that rebus to be the 'active' rebus
     // if the mouse is within the canvas and it's currently 'rebus mode' (not stats mode or about mode or... ect)
-    if (mouseY > 0 && mouseY < height && mouseX > 0 && mouseX < width && currentMode === 'rebusMode') {
+    if (mouseY > 0 && mouseY < height && mouseX > 0 && mouseX < width && currentState === States.rebusMode) {
         // checks to see if any rebus was clicked on, and if so sets it to active
         let clickedOnANewRebus = false; // records if user clicked on a new rebus or not (if not, they must have clicked on either the current active rebus OR the buffer space inbetween rebuses)
         for (let index of filteredRebusIndices) {
             // if the rebus is hovered over AND it's either desktop mode OR no rebuses are active...
             //  and the rebus has not yet been solved....
             //  and it's not currently already the active rebus...
-            if (rebuses[index].isHovered() && (!isARebusIsCurrentlyActive || desktopMode) && !rebuses[index].solved && activeFilteredRebusIndex != index) {
+            if (rebuses[index].isHovered() && (!isARebusIsCurrentlyActive || isDesktopMode()) && !rebuses[index].solved && activeFilteredRebusIndex != index) {
                 // if its mobile mode && the selected rebus is partially off screen...
-                if (mobileMode && !isRebusOnScreen(index)) {
+                if (isMobileMode() && !isRebusOnScreen(index)) {
                     // then scroll up and end the function now (ie don't set the active rebus, scroll up instead)
                     scrollDown();
                     return;
@@ -691,7 +864,7 @@ function mouseReleased() {
         }
         // deactivates the current rebus if a new rebus wasn't clicked on
         // AKA: This means the user clicked on the white space between rebuses
-        if (!clickedOnANewRebus && desktopMode) {
+        if (!clickedOnANewRebus && isDesktopMode()) {
             print('clicked on nothing, deactivating all rebuses');
             deactivateAllRebuses();
         }
@@ -927,11 +1100,11 @@ function keyPressed() {
             } else
                 // if hint mode wasn't activated, it exits out of the current mode or rebus
                 deactivateAllRebuses(); // deactivate all rebuses
-            currentMode = 'rebusMode';
+            currentState = States.rebusMode;
         } else {
             // if hint mode wasn't activated, it exits out of the current mode or rebus
             deactivateAllRebuses(); // deactivate all rebuses
-            currentMode = 'rebusMode';
+            currentState = States.rebusMode;
         }
     }
     if ((keyCode === ENTER || keyCode === RETURN) && isARebusIsCurrentlyActive) {  // if user pressed enter or return and a rebus is currently active...
@@ -943,7 +1116,7 @@ function keyPressed() {
     if (keyCode === UP_ARROW) { // if user pressed up arrow
         scrollUp(); // scroll up
     }
-    if (desktopMode && isARebusIsCurrentlyActive) {  // If user is not on a mobile device AND there is currently an active rebus
+    if (isDesktopMode() && isARebusIsCurrentlyActive) {  // If user is not on a mobile device AND there is currently an active rebus
         if (keyCode === LEFT_ARROW) { // if user pressed left arrow
             print('left arrow pressed');
             incrimentActiveRebus('backward');
@@ -963,7 +1136,7 @@ function keyPressed() {
 // if a hash change is requested (this includes the back button, I think)
 window.onhashchange = function () {
     // if there is currently already an active rebus AND the user is using a mobile device...
-    if (isARebusIsCurrentlyActive && mobileMode) {
+    if (isARebusIsCurrentlyActive && isMobileMode()) {
         // deactivating rebuses essentialaly 'exits' out of active rebus mobile mode
         deactivateAllRebuses();
         location.hash = 'home'; // have to add a new hash when you back out of mobile active mode to be used for the next time, the initial loading one only lastas one back button useage
@@ -988,34 +1161,35 @@ function optionsMenuInput() {
         closeButton.char = 'X';
         yesButton = new ButtonRectangular('yes');
         noButton = new ButtonRectangular('no');
-        if (mobileMode) { // alters default button size to be larger if user in on a mobile device
+        if (isMobileMode()) { // alters default button size to be larger if user in on a mobile device
             yesButton.setSize(130, 50);
             noButton.setSize(130, 50);
         }
-        currentMode = 'clearMode';
+        currentState = States.clearMode;
         return;
     } else
+        //TODO: Reactorwith switch case statement?
         if (selection === 'Stats') {
             deactivateAllRebuses(); // prevents input text box from appearing on top of window
             print('stats selected!');
             rebusSolvingRate = calcRebusSolvingRate(); // only calculated when stats menu is opened
             closeButton = new ButtonRound();
             closeButton.char = 'X';
-            currentMode = 'statMode';
+            currentState = States.statMode;
         } else
             if (selection === 'Contact') {
                 deactivateAllRebuses(); // prevents input text box from appearing on top of window
                 print('contact selected!');
                 closeButton = new ButtonRound();
                 closeButton.char = 'X';
-                currentMode = 'contactMode';
+                currentState = States.contactMode;
             } else
                 if (selection === 'About') {
                     deactivateAllRebuses(); // prevents input text box from appearing on top of window
                     print('about selected!');
                     closeButton = new ButtonRound();
                     closeButton.char = 'X';
-                    currentMode = 'aboutMode';
+                    currentState = States.aboutMode;
                 }
     // code form internet..... should reset select value to 'Menu' after a choice is made?
     let id = 'optionsMenu';
@@ -1023,7 +1197,7 @@ function optionsMenuInput() {
     let element = document.getElementById(id);
     element.value = valueToSelect;
     element.blur();
-    if (mobileMode) { optionsMenu.value(''); }
+    if (isMobileMode()) { optionsMenu.value(''); }
 }
 
 
@@ -1119,23 +1293,6 @@ function initializeCanvas() {
     canvas = createCanvas(400, 400); // creates canvas, saves to p5 variable
     canvas.id('canvas'); // sets id of DOM canvas element
     canvas.parent('container'); // sets parent of canvas as container div
-}
-
-/** Initializes the position vector that controls the location
- * of the active rebus when in mobile mode.
- * Needs to be initialized early because it is used to calculate 
- * the size/position of a number of other elements during setup() */
-function initializeActiveRebusMobilePosition() {
-    activeRebusPositionMobile = createVector(0, 10); // x value doesn't matter, it will be set in the 'resize' funtion(s)
-}
-
-/** Initializes the position vector that controls the location
- * of the input text box when in mobile mode.
- * Needs to be initialized early because it is used to calculate
- * the size/position of a number of other elements during setup() */
-function initializeTextBoxMobilePosition() {
-     // just need to initialize the vector object, it's values will be set based on the screen size in the 'screen resized' functions
-    textBoxPositionMobile = createVector(0, 0);
 }
 
 // creates navbar DIV
@@ -1362,11 +1519,11 @@ function drawRebuses() {
 
 // draws input text box
 function drawTextInputBox(x, y) {
-    if (desktopMode) {
+    if (isDesktopMode()) {
         // only moves textbox position around for desktop mode
         textInputBox.position(x + 20, y + rebusSizeCurrent + 3, 'relative'); // moves textbox under active rebus
     }
-    if (mobileMode) {
+    if (isMobileMode()) {
         textInputBox.position(textBoxPositionMobile.x, textBoxPositionMobile.y, 'relative');  // positions text box centered under mobile large drawing of active rebus
     }
 }
@@ -1424,6 +1581,7 @@ function drawActiveRebus() {
 }
 
 // darws the temporary stats screen
+//TODO: Refactor this terrible method (DRY!)
 function drawStatsScreen() {
     // draws background rectangle
     let buffer = rebusSizeCurrent / 4;  // buffer for boundary rectangle
@@ -1431,7 +1589,7 @@ function drawStatsScreen() {
     fill(255);
     strokeWeight(1.5);
     let statsWindowHeight = 500;
-    if (mobileMode) { statsWindowHeight = height - buffer * 2; }
+    if (isMobileMode()) { statsWindowHeight = height - buffer * 2; }
     rect(buffer, buffer, width - buffer * 2, statsWindowHeight, 5);
     // draws stats
     buffer += 20; // buffer for text
@@ -1443,69 +1601,69 @@ function drawStatsScreen() {
     textSize(14);
     let nextLineY = buffer + 20 + 50;
     let newLineSpacing = 25;
-    if (mobileMode) { newLineSpacing = 23; }
+    if (isMobileMode()) { newLineSpacing = 23; }
     let extraLineSpacing = 25;
-    if (mobileMode) { extraLineSpacing = 12; }
+    if (isMobileMode()) { extraLineSpacing = 12; }
     let secondColumn = width / 2;
-    if (mobileMode) { secondColumn = width - buffer; }
+    if (isMobileMode()) { secondColumn = width - buffer; }
     // what's a 'for loop?'
     textAlign(LEFT);
     text('Total Rebuses Solved:', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(numberOfCompletedRebuses + ' (' + round(((numberOfCompletedRebuses / rebuses.length) * 100), 1) + '%)', secondColumn, nextLineY);
     nextLineY += newLineSpacing;
     textAlign(LEFT);
     text('Strongest Category:', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(strongestCategory, secondColumn, nextLineY);
     nextLineY += newLineSpacing + extraLineSpacing;
     textAlign(LEFT);
     text('Total Time Playing: ', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(convertSecondsToTimeString(), secondColumn, nextLineY);
     nextLineY += newLineSpacing;
     textAlign(LEFT);
     text('Rebus solving rate: ', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(rebusSolvingRate, secondColumn, nextLineY);
     nextLineY += newLineSpacing + extraLineSpacing;
     textAlign(LEFT);
     text('Hints used:', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(numberOfHintsUsed, secondColumn, nextLineY);
     nextLineY += newLineSpacing;
     textAlign(LEFT);
     text('Solved without hints: ', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(numberOfCompletedRebusesWithoutHints + ' (' + floor((numberOfCompletedRebusesWithoutHints / numberOfCompletedRebuses) * 100) + '%)', secondColumn, nextLineY);
     nextLineY += newLineSpacing + extraLineSpacing;
     textAlign(LEFT);
     text('Average guesses per rebus: ', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(round((numberOfIncorrectGuesses + numberOfCompletedRebuses) / numberOfCompletedRebuses), secondColumn, nextLineY);
     nextLineY += newLineSpacing;
     textAlign(LEFT);
     text('Correct Guess Percentage: ', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(calcCorrectGuessPercentage(), secondColumn, nextLineY);
     nextLineY += newLineSpacing + extraLineSpacing;
     textAlign(LEFT);
     text('Number of incorrect guesses: ', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(numberOfIncorrectGuesses, secondColumn, nextLineY);
     nextLineY += newLineSpacing;
     textAlign(LEFT);
     text('Worst guess so far:', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(worstGuessSoFar, secondColumn, nextLineY);
     nextLineY += newLineSpacing + extraLineSpacing;
     textAlign(LEFT);
     text('Rebus City Rank: ', buffer, nextLineY);
-    if (mobileMode) { textAlign(RIGHT); }
+    if (isMobileMode()) { textAlign(RIGHT); }
     text(calcRebusRank(), secondColumn, nextLineY);
     // sets location of close button
     closeButton.setLocation(width - 70, 70);
-    if (mobileMode) { closeButton.setLocation(width - 60, 60); }
+    if (isMobileMode()) { closeButton.setLocation(width - 60, 60); }
     closeButton.draw(); // draws close button
 }
 
@@ -1517,24 +1675,24 @@ function drawClearScreen() {
     fill(255);
     strokeWeight(1.5);
     let clearWindowHeight = 200;
-    if (mobileMode) { clearWindowHeight = height / 2; }
+    if (isMobileMode()) { clearWindowHeight = height / 2; }
     rect(buffer, buffer, width - buffer * 2, clearWindowHeight, 5);
     // draws text
     fill(0);
     noStroke();
     textAlign(CENTER);
-    if (mobileMode) { textSize(24); }
+    if (isMobileMode()) { textSize(24); }
     text('Are you sure?', width / 2, buffer * 2.5);
     fill(192);
-    if (desktopMode) {
+    if (isDesktopMode()) {
         text('This will reset all solved rebuses and stats.', width / 2, buffer * 2.5 + 20);
-    } else if (mobileMode) {
+    } else if (isMobileMode()) {
         text('This will reset all', width / 2, buffer * 4);
         text('solved rebuses and stats.', width / 2, buffer * 5);
     }
     // sets location of close button
     closeButton.setLocation(width - 70, 70);
-    if (mobileMode) { closeButton.setLocation(width - 60, 60); }
+    if (isMobileMode()) { closeButton.setLocation(width - 60, 60); }
     closeButton.draw(); // draws close button
     // sets location of yes and no buttons
     yesButton.setLocation(width / 2 + 10, clearWindowHeight / 2 + buffer * 2);
@@ -1551,7 +1709,7 @@ function drawContactScreen() {
     fill(255);
     strokeWeight(1.5);
     let contactWindowHeight = 500;
-    if (mobileMode) { contactWindowHeight = height - buffer * 2; }
+    if (isMobileMode()) { contactWindowHeight = height - buffer * 2; }
     rect(buffer, buffer, width - buffer * 2, contactWindowHeight, 5);
     // draws text
     fill(192);
@@ -1562,14 +1720,14 @@ function drawContactScreen() {
     // text
     textAlign(CENTER);
     textStyle(ITALIC);
-    if (mobileMode) {
+    if (isMobileMode()) {
         text('contact form under construction', width / 2, (height / 2) - 23);
         text('please contact us on instagram', width / 2, (height / 2));
         textStyle(BOLD);
         text('@rebus.city', width / 2, (height / 2) + 46);
         textStyle(NORMAL);
     }
-    if (desktopMode) {
+    if (isDesktopMode()) {
         text('contact form under construction', width / 2, buffer * 3.5);
         text('please contact us on instagram', width / 2, buffer * 4);
         textStyle(BOLD);
@@ -1578,7 +1736,7 @@ function drawContactScreen() {
     }
     // sets location of close button
     closeButton.setLocation(width - 70, 70);
-    if (mobileMode) { closeButton.setLocation(width - 60, 60); }
+    if (isMobileMode()) { closeButton.setLocation(width - 60, 60); }
     closeButton.draw(); // draws close button
 }
 
@@ -1590,7 +1748,7 @@ function drawAboutScreen() {
     fill(255);
     strokeWeight(1.5);
     let aboutWindowHeight = 500;
-    if (mobileMode) { aboutWindowHeight = height - buffer * 2; }
+    if (isMobileMode()) { aboutWindowHeight = height - buffer * 2; }
     rect(buffer, buffer, width - buffer * 2, aboutWindowHeight, 5);
     // draws text
     fill(192);
@@ -1599,7 +1757,7 @@ function drawAboutScreen() {
     textSize(20);
     text('About', buffer + 20, buffer + 40);
     // text
-    if (desktopMode) {
+    if (isDesktopMode()) {
         let nextLine = buffer + 80;
         let lineSpacing = 16;
         textSize(14);
@@ -1637,7 +1795,7 @@ function drawAboutScreen() {
         text('Please feel free to contact me with feedback or bugs under', buffer + 20, nextLine);
         nextLine += lineSpacing;
         text('the "contact" page.', buffer + 20, nextLine);
-    } else if (mobileMode) {
+    } else if (isMobileMode()) {
         let nextLine = buffer + 80;
         let lineSpacing = 16;
         textSize(14);
@@ -1686,7 +1844,7 @@ function drawAboutScreen() {
     }
     // sets location of close button
     closeButton.setLocation(width - 70, 70);
-    if (mobileMode) { closeButton.setLocation(width - 60, 60); }
+    if (isMobileMode()) { closeButton.setLocation(width - 60, 60); }
     closeButton.draw(); // draws close button
 }
 
@@ -1714,31 +1872,32 @@ function drawScrollBar() {
 function drawGUI() {
     drawScrollBar();  // draws scroll bar (only if currently scrolling)
     // hides header & footer if a mobile keyboard is active, so the active rebus and text input box actually stay/fit on the screen
-    if (mobileMode && isTextInputBoxFocused()) {
+    if (isMobileMode() && isTextInputBoxFocused()) {
         navbar.hide();
         footer.hide();
     } else if (!isTextInputBoxFocused()) {
         navbar.show();
         footer.show();
     }
-    if (desktopMode) {
+    if (isDesktopMode()) {
         drawScrollButtons();
     }
     drawSolution(); // draws solution to solved & hovered/touched rebus puzzles
     // draws stats screen if stats mode is on
-    if (currentMode === 'statMode') {
+    //TODO: Refactor with enum and swtichcase?
+    if (currentState === States.statMode) {
         drawStatsScreen();
     } else
         // draws clear confirmation window if clearMode is on
-        if (currentMode === 'clearMode') {
+        if (currentState === States.clearMode) {
             drawClearScreen();
         } else
             // draws contact window if contactMode is on
-            if (currentMode === 'contactMode') {
+            if (currentState === States.contactMode) {
                 drawContactScreen();
             } else
                 // draws clear confirmation window if clearMode is on
-                if (currentMode === 'aboutMode') {
+                if (currentState === States.aboutMode) {
                     drawAboutScreen();
                 }
 }
@@ -1751,7 +1910,7 @@ function drawSolution() {
     // for all rebuses that match the current category filter....
     for (let index of filteredRebusIndices) {
         // if the rebus is solved && the mouse is hovered over it (desktop mode only)...
-        if (rebuses[index].solved && rebuses[index].isHovered() && desktopMode) {
+        if (rebuses[index].solved && rebuses[index].isHovered() && isDesktopMode()) {
             // if 30 frames have passed...
             if (rebuses[index].hoverDuration > 30) {
                 // opacity lets the answer fade in!
@@ -1768,7 +1927,7 @@ function drawSolution() {
             }
         }
         // if finger is held down over a solved rebus on a mobile device....
-        if (rebuses[index].solved && mobileMode && rebuses[index].isHovered() && touches.length > 0 && !isARebusIsCurrentlyActive) {
+        if (rebuses[index].solved && isMobileMode() && rebuses[index].isHovered() && touches.length > 0 && !isARebusIsCurrentlyActive) {
             // doesn't start showing answer until finger has been hold over rebus for 30 frames
             if (rebuses[index].hoverDuration > 30) {
                 // opacity lets the answer fade in!
@@ -1896,8 +2055,7 @@ function resizeWindowResponsivly() {
     // if the current window width is larger than the maximum width required to display 3 rebuses across (at a nice resolution)...
     if (windowWidth > maxCanvasWidth()) {
         // adjusts global variables in response to new screen size
-        desktopMode = true;
-        mobileMode = false;
+        screenMode = ScreenModes.desktopMode;
         // resizes or repositions all necesary elements based on 'desktop' settings
         resizeCanvas(maxCanvasWidth(), calcCanvasHeight('desktop'));
         resizeNavbar('desktop');
@@ -1916,8 +2074,7 @@ function resizeWindowResponsivly() {
     // if the window is smaller than the maximum 3-horz-rebus display size...
     {
         // adjusts global variables in response to new screen size
-        mobileMode = true;
-        desktopMode = false;
+        screenMode = ScreenModes.mobileMode;
         // resizes or repositions all necesary elements based on 'mobile' settings
         resizeCanvas(windowWidth, calcCanvasHeight('mobile'));
         resizeNavbar('mobile');
@@ -2828,7 +2985,7 @@ function setActiveRebus(index) {
     rebuses[filteredRebusIndices[activeFilteredRebusIndex]].hoverDuration = 0;
     textInputBox.show();  // unhides text box when a rebus is active (so user can enter guesses!)
     isARebusIsCurrentlyActive = true; // global variable, used to trigger actions in draw loop
-    if (mobileMode) { // if user is on a mobile device...
+    if (isMobileMode()) { // if user is on a mobile device...
         closeButton = new ButtonRound();  // creates a new close button
         closeButton.setLocation(width - (rebusSizeCurrent / 4), 10 + closeButton.r); // sets the location of that close button
         closeButton.setStyle('closeButtonMobile');  // styles close button for mobile
@@ -2980,7 +3137,7 @@ function toggleHints(hintNumber) {
         rebuses[activeRebusIndex].hint1Active = true;
         rebuses[activeRebusIndex].hint2Active = false;
         hintText.show();  // unhides hinttext DOM <p> element
-        if (desktopMode) {  // hint text repositions is irrelevatn on mobile devices (hints always stay in same places)
+        if (isDesktopMode()) {  // hint text repositions is irrelevatn on mobile devices (hints always stay in same places)
             hintText.position(hintTextLocX, hintTextLocY);  // positions hintText relative to the location of this (the active) rebus
         }
         hintText.html(rebuses[activeRebusIndex].hint1); // updates the hintText <p> DOM element with the hint text (string) stored in this rebus object
@@ -3004,7 +3161,7 @@ function toggleHints(hintNumber) {
         rebuses[activeRebusIndex].hint2Active = true;
         rebuses[activeRebusIndex].hint1Active = false;
         hintText.show();  // unhides hinttext DOM <p> element
-        if (desktopMode) {  // hint text repositions is irrelevatn on mobile devices (hints always stay in same places)
+        if (isDesktopMode()) {  // hint text repositions is irrelevatn on mobile devices (hints always stay in same places)
             hintText.position(hintTextLocX, hintTextLocY);  // positions hintText relative to the location of this (the active) rebus
         }
         hintText.html(rebuses[activeRebusIndex].hint2); // updates the hintText <p> DOM element with the hint text (string) stored in this rebus object
