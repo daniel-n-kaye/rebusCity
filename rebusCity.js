@@ -256,10 +256,9 @@ let spacingBetweenRebusesCurrent = 25;
 let activeRebusSizeMobile = rebusSizeCurrent * 2;
 
 /** Position (px) of top-left corner of active rebus image when drawing on mobile mode.
- * (initizliaed in setup, but actually set in the 'resize' function, because
- * it's based off of the browser's screen size
- * (type: p5.Vector) */
-let activeRebusPositionMobile;
+ *  x value doesn't matter, it will be set in the 'resize' funtion(s), based off of the browser's screen size
+ * @type {XYPosition} */
+let activeRebusPositionMobile = new XYPosition(0, 10);
 
 /** Stores the number of full rebuses that fit on the current screen.
  * Recalculated every time window is resized.
@@ -285,9 +284,9 @@ let numOfRows;
 const textBoxHeightMobile = 40;
 
 /** Location (px) of top-left corner of input text box on mobile devices.
- * Initialized in window resize functions because it's based on screen width
- * (type: p5.Vector) */
-let textBoxPositionMobile;
+ *  It's initial values don' tmatter, they will be set based on the screen size in the 'screen resized' functions
+ * @type {XYPosition} */
+let textBoxPositionMobile = new XYPosition(0, 0);
 
 //#endregion GLOBAL VARIABLES - INPUT TEXT BOX PROPERTIES
 
@@ -318,12 +317,14 @@ let scrollRate = 0;
 let startingYValueWhenTouchStarted;
 
 /** x,y position at which the current touch/swipe started
- * (type: p5.Vector) */
-let touchStartedPosition;
+ * Initial values don't matter, they will be reset as soon as a touch is started
+ * @type {XYPosition} */
+let touchStartedPosition = new XYPosition(0,0);
 
 /** x,y position at which the current touch/swipe ended
- * (type: p5.Vector) */
-let touchEndedPosition;
+ * Initial values don't matter, they will be reset as soon as a touch is ended
+ * @type {XYPosition} */
+let touchEndedPosition = new XYPosition(0, 0);
 
 /** velocity in pixels / milisecond of current or last swipe
  * @type {number} */
@@ -383,15 +384,41 @@ let currentState = States.rebusMode;
 
 //#endregion GLOBAL VARIABLES - STATES
 
+//#region GLOBAL VARIALBES - BUTTONS
 
-//! buttons (objects) used throughout program
-let closeButton;  //  button with x used to close things
-let yesButton;  // rectangular button that says 'yes', used in confirming 'clear data'
-let noButton;  // rectangular button that says 'no', sed in confirming 'clear data'
-let hintButton; // circulat button with question mark that displays hints
-let scrollButtonUp; // fade-in scroll up arrow used in desktop mode
-let scrollButtonDown; // fade-in scroll down arrow used in desktop mode
-let scrollBar;  // scroll bar to incidate position, interactive on desktop mode
+// buttons (as objects) used throughout program.
+// Note, these are NOT DOM elements, just JS objects.
+
+/** button with x used to close things
+ * @type {ButtonRound} */
+let closeButton;
+
+/** rectangular button that says 'yes', used in confirming 'clear data'
+ * @type {ButtonRectangular} */
+let yesButton;
+
+/** rectangular button that says 'no', used in confirming 'clear data'
+ * @type {ButtonRectangular} */
+let noButton;
+
+/** circular button with question mark that displays hints
+ * @type {ButtonRound} */
+let hintButton;
+
+/** fade-in scroll up arrow used in desktop mode
+ * @type {ScrollButton} */
+let scrollButtonUp;
+
+/** fade-in scroll down arrow used in desktop mode
+ * @type {ScrollButton} */
+let scrollButtonDown;
+
+/** scroll bar to incidate vertical position in currently active rebus list, interactive on desktop mode
+ * @type {ScrollBar} */
+let scrollBar;
+
+//#endregion GLOBAL VARIALBES - BUTTONS
+
 
 //! stat recording variables
 let numberOfCompletedRebuses = 0; // stores number of rebus puzzles that have been solved
@@ -469,8 +496,6 @@ function setup() {
     createCategories(); // creates category list
     // initializes Canvas of correct size (based on screen size), and ties DOM object to p5 variable
     initializeCanvas();
-    initializeActiveRebusMobilePosition();
-    initializeTextBoxMobilePosition();
     // creates all DOM elements and assigns them to p5. variables
     //TODO: group these all in one method
     createRanks();  // creates array of rebus ranks (for stats page) from table
@@ -1153,23 +1178,6 @@ function initializeCanvas() {
     canvas = createCanvas(400, 400); // creates canvas, saves to p5 variable
     canvas.id('canvas'); // sets id of DOM canvas element
     canvas.parent('container'); // sets parent of canvas as container div
-}
-
-/** Initializes the position vector that controls the location
- * of the active rebus when in mobile mode.
- * Needs to be initialized early because it is used to calculate 
- * the size/position of a number of other elements during setup() */
-function initializeActiveRebusMobilePosition() {
-    activeRebusPositionMobile = createVector(0, 10); // x value doesn't matter, it will be set in the 'resize' funtion(s)
-}
-
-/** Initializes the position vector that controls the location
- * of the input text box when in mobile mode.
- * Needs to be initialized early because it is used to calculate
- * the size/position of a number of other elements during setup() */
-function initializeTextBoxMobilePosition() {
-     // just need to initialize the vector object, it's values will be set based on the screen size in the 'screen resized' functions
-    textBoxPositionMobile = createVector(0, 0);
 }
 
 // creates navbar DIV
