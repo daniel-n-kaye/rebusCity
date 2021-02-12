@@ -7,7 +7,7 @@
 class ButtonRound {
     constructor(x, y) {
         this.r = floor(0.07 * rebusSizeCurrent);  // default button Radius
-        if (mobileMode) { this.r *= 2; }  // default mobile radius
+        if (isMobileMode()) { this.r *= 2; }  // default mobile radius
         this.xStrokeLength = 0.6 * this.r;
         if (x && y) { // if constructor was provided with both an x & y value...
             this.x = x;
@@ -57,7 +57,7 @@ class ButtonRound {
         let yOffset = 0;
         if (this.char === 'X') {
             yOffset = this.r * (1 / 8);
-            if (mobileMode) { yOffset -= 1; }
+            if (isMobileMode()) { yOffset -= 1; }
         }
         text(this.char, this.x, this.y + (this.r / 2) + yOffset);
     }
@@ -102,7 +102,7 @@ class ButtonRound {
             this.charFill = 255;
             this.charFillHover = 255;
             this.circleNoFill = false;
-            if (mobileMode) {
+            if (isMobileMode()) {
                 this.circleStrokeWeight = 2;
             }
             return;
@@ -114,7 +114,7 @@ class ButtonRound {
             this.charFill = 192;
             this.charFillHover = 255;
             this.circleNoFill = true;
-            if (mobileMode) {
+            if (isMobileMode()) {
                 this.circleStrokeWeight = 2;
             }
             return;

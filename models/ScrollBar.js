@@ -84,11 +84,11 @@ class ScrollBar {
                 stroke(0);
             }
             // if on a desktop device, draws one (clickable) scrollbar on right side
-            if (desktopMode) {
+            if (isDesktopMode()) {
                 line(this.x, this.p + (this.h / 2), this.x, this.p - (this.h / 2));
             } else
                 // if on a mobile device, draws a line on both sides, non clickable
-                if (mobileMode) {
+                if (isMobileMode()) {
                     fill(192, o);
                     noStroke();
                     rect(0 - this.strokeWeight / 2, this.p - (this.h / 2), this.strokeWeight, this.h, 3);
