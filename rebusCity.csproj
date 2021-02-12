@@ -67,7 +67,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="CSS_rebusCity.css" />
+    <Content Include="style\CSS_rebusCity.css" />
     <Content Include="data\dropdownArrowBlack.png" />
     <Content Include="data\dropdownArrowGrey.png" />
     <Content Include="data\hamburgerButton.png" />
@@ -412,7 +412,8 @@
     <Content Include="data\preloading.gif" />
     <Content Include="data\thinkOutsideTheBox.jpg" />
     <Content Include="index.html" />
-    <Content Include="detectInternetExplorer.js" />
+    <Content Include="miscScripts\detectInternetExplorer.js" />
+    <Content Include="libraries\p5.min.js" />
     <Content Include="models\XYPosition.js" />
     <Content Include="models\ScrollBar.js" />
     <Content Include="models\PastTouch.js" />
@@ -420,18 +421,10 @@
     <Content Include="models\ButtonRectangular.js" />
     <Content Include="models\ButtonRound.js" />
     <Content Include="models\Rebus.js" />
-    <Content Include="p5\lib\addons\p5.sound.js" />
-    <Content Include="p5\lib\addons\p5.sound.min.js" />
-    <Content Include="p5\lib\empty-example\index.html" />
-    <Content Include="p5\lib\empty-example\sketch.js" />
-    <Content Include="p5\lib\p5.js" />
-    <Content Include="p5\lib\p5.min.js" />
-    <Content Include="p5\lib\README.txt" />
-    <Content Include="p5\__MACOSX\lib\empty-example\._index.html" />
     <Content Include="rebusCity.js" />
     <Content Include="unitTesting\UnitTestResult.js" />
     <Content Include="unitTesting\UnitTestRunner.js" />
-    <Content Include="unitTestResults.html" />
+    <Content Include="unitTesting\unitTestResults.html" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
@@ -440,8 +433,6 @@
   <ItemGroup>
     <Content Include="data\rebusCityDataTable.csv" />
     <Content Include="data\rebusRanks.csv" />
-    <Content Include="p5\lib\.DS_Store" />
-    <Content Include="p5\__MACOSX\lib\._.DS_Store" />
     <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

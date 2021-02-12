@@ -157,8 +157,8 @@
 
 /** when true, unit tests will be run 
  @type {boolean} */
-//let runUnitTests = true; //! Change to false before release!
-let runUnitTests = false; //! Change to true to test!
+let runUnitTests = true; //! Change to false before release!
+//let runUnitTests = false; //! Change to true to test!
 
 //#endregion GLOBAL VARIABLES - DEBUG AND TESTING
 
@@ -3074,7 +3074,7 @@ function runAllUnitTests() {
     );
 
 
-    newpage = window.open('unitTestResults.html');
+    newpage = window.open('unitTesting/unitTestResults.html');
     let str = unitTests.getFormattedTestResults();
     //TODO: get this working better, not just with 'document.write' but actually add DOM elements to the body of the new test result page...
     newpage.document.write(str);
