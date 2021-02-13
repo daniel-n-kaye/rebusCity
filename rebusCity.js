@@ -475,6 +475,10 @@ let isTabActive = true;
  *  @type {number} */ 
 let rebusSolvingRate;
 
+/** data table holding all of the rebus ranks imported from the rebus ranks .csv file
+ * (type: p5.Table) */
+let rebusRankDataTable;
+
 /** array containing all rebus ranks.
  * Loaded from csv file during setup
  *  @type {string[]} */ 
@@ -576,12 +580,8 @@ let copyrightP;
 
 //#region PRELOAD
 
-////////////////////////////////////////////////////////////////////////////////
-// Preload /////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-
-// runs before setup, doesn't move on until everything in preload has loaded
+/** runs before setup(), script doesn't continue until everything in preload has finished loading.
+ * (built in p5 method) */
 function preload() {
     // loads rebus data table .csv file into p5.table object
     rebusDataTable = loadTable(csvPath, 'csv', 'header');
@@ -591,29 +591,60 @@ function preload() {
     rebusRankDataTable = loadTable(rebusRankCsvPath, 'csv', 'header');
 }
 
+//! these are actual setup functions......
+//#region PRELOAD HELPER METHODS
+// functions called/used during the preload() function
+
+
+/** draws loading bar animation and loading logo/image */
+function drawLoadingAnimation() {
+    // draws loading bar rectangle fill based on number of images loaded
+    noStroke();
+    fill(170);
+    rect(20, 40, ((width - 40) * (loadingCounter / totalNumberOfRebuses)), 20, 5);
+    // draws outline of loading bar rectange
+    stroke(0);
+    noFill();
+    strokeWeight(1);
+    rect(20, 40, width - 40, 20, 5);
+    // draws loading image
+    noStroke();
+    fill(192);
+    textSize(16);
+    textAlign(CENTER);
+    text('Rebus City - Think Outside The Box',
+        width / 2, height / 2 + rebusSizeMax / 2);
+    // positions doesn't quite work on very small browser windows yet....
+    image(loadingImage, width / 2 - rebusSizeMax / 2, height / 2 - rebusSizeCurrent,
+        rebusSizeMax, rebusSizeMax);
+}
+
+//#endregion PRELOAD HELPER METHODS
+
 //#endregion PRELOAD
 
 //#region SETUP
 
-////////////////////////////////////////////////////////////////////////////////
-// Setup ///////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-// runs once only after preload() is complete
+/** Runs once, only after preload() is complete.
+ * draw() may start before this function is complete.
+ * (built in p5 method) */
 function setup() {
     // saves total number of rebus puzzels to global variables
+    //TODO: switch all other instances to rebuses[].length
     totalNumberOfRebuses = rebusDataTable.getRowCount();
     // loads all images and changes gloabl variable once all our loaded
     for (let i = 0; i < totalNumberOfRebuses; i++) {
-        loadImages(i, 'data/images/' +
-            rebusDataTable.getString(i, 'fileName'));
+        let imageFileName = 'data/images/' + rebusDataTable.getString(i, 'fileName')
+        //loadImages(i, 'data/images/' + rebusDataTable.getString(i, 'fileName'));
+        loadImages(i, imageFileName);
     }
-    createCategories(); // creates category list
+    categories = createCategories(rebusDataTable, totalNumberOfRebuses); // creates category list
     // initializes Canvas of correct size (based on screen size), and ties DOM object to p5 variable
-    initializeCanvas();
-    // creates all DOM elements and assigns them to p5. variables
+    //initializeCanvas();
+    staticRefs.initializeCanvas();
+    // creates all DOM elements and saves them all as p5.Element objects
     //TODO: group these all in one method
-    createRanks();  // creates array of rebus ranks (for stats page) from table
+    rebusRanks = createRanks();  // creates array of rebus ranks (for stats page) from table
     createNavbar();
     createFooter();
     createLogo();
@@ -633,6 +664,77 @@ function setup() {
     resizeWindowResponsivly();  // this function is also called any time the window is resized
     setInterval(calcScrollRate, 100);
 }
+
+//#region SETUP - HELPER METHODS
+// functions called within Setup()
+
+
+/** Loads all rebus images (asyncronously).
+* Then initiates all rebus objects using callbacks and closure
+* (remind me to look up what 'javascript closure' is, not 100% sure how/why this works)
+ * @param {any} index index of the rebus object who's image is being loaded
+ * @param {any} fileName name of image file that corresponds to the rebus at rebuses[index]
+ * */
+function loadImages(index, fileName) {
+    loadImage(fileName, imageLoaded); // loads each images, and runs 'imageLoaded' as a callback once each image is finished loading
+    function imageLoaded(img) {  // takes a loaded image and...
+        rebuses[index] = new Rebus(img, fileName, index); // initiayes a new rebus object with it, it's filename, and the original index that was used to load the image. the 'index' use useful inside the rebus object for finding later after shuffling the order of all the rebuses
+        //     print(index + ' ' + fileName + ' at ' + floor(millis()));  // enable for loading error debugging
+        loadingCounter++; // incriments the counter b/c another images has finished loading
+        if (loadingCounter === totalNumberOfRebuses) { // once all iamges have loaded....
+            //       loadingComplete(); // performs a number of actions that need to happen after loading is complere
+            loading = false;  // changes global variable, affects drip() loop, b/c we are no longer in 'loading' mode
+            print('Loading Complete');
+            location.hash = 'loaded'  // required so i can override rist back button push to get back to this page from the mobile active rebus page;
+            loadFromLocalStorage();  // loads any previously solved rebuses from user's browser's local storage
+            footer.show();  // unhides footer, which is hidden while the loading animvaiton is being shown
+            setInterval(calcTimePlaying, 1000);  // sets interval to call function that keeps track of how long user's been playing at rebus city ever 1000ms (aka every second)
+            setInterval(updateScores, 1000); // updates scores every 1 second, ensures that update occurs AFTER loading local storage has completed (would make this a callback of the loadLocalStorageData function, but I'm not sure how)
+            resizeWindowResponsivly();  // necesary to update numOfRowsThatFitOnscreen, and maybe other things
+            scrollBar.calcLen();
+            scrollBar.calcPos();
+            //       print(rebuses);  // enable to check if rebus data loaded correctly
+        }
+    }
+}
+
+/** creats an array of all the categories, extrated from the rebus data table
+ * @param {p5.Element} rebusDataTable data table containing all rebus information
+ * @param {number} totalNumberOfRebuses total numnber of rebuses in data table
+ * @returns {string[]} */
+function createCategories(rebusDataTable, totalNumberOfRebuses) {
+    // populates list of categories (avoids duplicates);
+    let categories = [];
+    categories[0] = 'All'; // sets first value of 'categories' array to the first line of the data table, used to start comparason
+    // for every other line of the data table (hence why i starts at 1 and not 0)...
+    for (let i = 1; i < totalNumberOfRebuses; i++) { // for each line in the data table....
+        if (!(categories.includes(rebusDataTable.getString(i, 'category')))) { // if that line's category is NOT already included in the list of all categories...
+            categories.push(rebusDataTable.getString(i, 'category'));  // add it to the lst of all categories
+        }
+        if (rebusDataTable.getString(i, 'secondCategory') != '' &&  // if the rebus has a second category &&
+            !(categories.includes(rebusDataTable.getString(i, 'secondCategory')))) { // the second category is not already part of the categories list...
+            //         print('adding second category!');
+            categories.push(rebusDataTable.getString(i, 'secondCategory'));  // add it to the lst of all categories
+        }
+    }
+    //   print(categories);
+    return categories;
+}
+
+/** returns an array of all rebus ranks and saved to a global variable.
+ * data extracted from p5 table object created for .csv
+ * @param rebusRankDataTable (p5.table object) containing all rebus ranks
+ * @returns {string[]} */
+function createRanks(rebusRankDataTable) {
+    let rows = rebusRankDataTable.getRows();
+    let rebusRanks = [];
+    for (let row of rows)
+        rebusRanks.push(row.get(1));
+    //print(rebusRanks); (debug)
+    return rebusRanks
+}
+
+//#endregion SETUP - HELPER METHODS
 
 //#endregion SETUP
 
@@ -1202,91 +1304,7 @@ function optionsMenuInput() {
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Preload Functions ///////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-// functions called/used during the preload() function
 
-// loads all rebus images (asyncronously) 
-// then initiates all rebus objects using callbacks and closure (remind me to look up what 'javascript closure' is, not 100% sure how/why this works);
-function loadImages(index, fileName) {
-    loadImage(fileName, imageLoaded); // loads each images, and runs 'imageLoaded' as a callback once the image is finished loading
-    function imageLoaded(img) {  // takes a loaded image and...
-        rebuses[index] = new Rebus(img, fileName, index); // initiayes a new rebus object with it, it's filename, and the original index that was used to load the image. the 'index' use useful inside the rebus object for finding later after shuffling the order of all the rebuses
-        //     print(index + ' ' + fileName + ' at ' + floor(millis()));  // enable for loading error debugging
-        loadingCounter++; // incriments the counter b/c another images has finished loading
-        if (loadingCounter == totalNumberOfRebuses) { // once all iamges have loaded....
-            //       loadingComplete(); // performs a number of actions that need to happen after loading is complere
-            loading = false;  // changes global variable, affects drip() loop, b/c we are no longer in 'loading' mode
-            print('Loading Complete');
-            location.hash = 'loaded'  // required so i can override rist back button push to get back to this page from the mobile active rebus page;
-            loadFromLocalStorage();  // loads any previously solved rebuses from user's browser's local storage
-            footer.show();  // unhides footer
-            setInterval(calcTimePlaying, 1000);  // calls timer function once every second
-            setInterval(updateScores, 1000); // updates scores every 1 second, ensures that update occurs AFTER loading local storage has completed (would make this a callback of the loadLocalStorageData function, but I'm not sure how)
-            resizeWindowResponsivly();  // necesary to update numOfRowsThatFitOnscreen, and maybe other things
-            scrollBar.calcLen();
-            scrollBar.calcPos();
-            //       print(rebuses);  // enable to check if rebus data loaded correctly
-        }
-    }
-}
-
-// draws loading bar animation and loading logo/image
-function drawLoadingAnimation() {
-    // draws loading bar rectangle fill based on number of images loaded
-    noStroke();
-    fill(170);
-    rect(20, 40, ((width - 40) * (loadingCounter / totalNumberOfRebuses)), 20, 5);
-    // draws outline of loading bar rectange
-    stroke(0);
-    noFill();
-    strokeWeight(1);
-    rect(20, 40, width - 40, 20, 5);
-    // draws loading image
-    noStroke();
-    fill(192);
-    textSize(16);
-    textAlign(CENTER);
-    text('Rebus City - Think Outside The Box',
-        width / 2, height / 2 + rebusSizeMax / 2);
-    // positions doesn't quite work on very small browser windows yet....
-    image(loadingImage, width / 2 - rebusSizeMax / 2, height / 2 - rebusSizeCurrent,
-        rebusSizeMax, rebusSizeMax);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Setup Functions /////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////// 
-// functions called within the Setup() function
-
-// creats an array of all the categories
-function createCategories() {
-    // populates list of categories (avoids duplicates);
-    //   categories[0] = rebusDataTable.getString(0,'category'); // sets first value of 'categories' array to the first line of the data table, used to start comparason
-    categories[0] = 'All'; // sets first value of 'categories' array to the first line of the data table, used to start comparason
-    // for every other line of the data table (hence why i starts at 1 and not 0)...
-    for (let i = 1; i < totalNumberOfRebuses; i++) { // for each line in the data table....
-        if (!(categories.includes(rebusDataTable.getString(i, 'category')))) { // if that line's category is NOT already included in the list of all categories...
-            categories.push(rebusDataTable.getString(i, 'category'));  // add it to the lst of all categories
-        }
-        if (rebusDataTable.getString(i, 'secondCategory') != '' &&  // if the rebus has a second category &&
-            !(categories.includes(rebusDataTable.getString(i, 'secondCategory')))) { // the second category is not already part of the categories list...
-            //         print('adding second category!');
-            categories.push(rebusDataTable.getString(i, 'secondCategory'));  // add it to the lst of all categories
-        }
-    }
-    //   print(categories);
-}
-
-// creats an array of all ranks saved to a global variable, data imported from google sheet published to web as CSV
-function createRanks() {
-    for (let i = 0; i < rebusRankDataTable.getRowCount(); i++) {
-        rebusRanks.push(rebusRankDataTable.get(i, 0));
-    }
-    //   print(rebusRanks);
-}
 
 // initializes canvas
 function initializeCanvas() {
@@ -1480,6 +1498,9 @@ function touchedOutsideActiveRebus() {
     return bool;
 }
 
+let cow = new Object();
+cow.randomProperty = 'cow propr';
+console.log(cow.randomProperty);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -425,6 +425,7 @@
     <Content Include="unitTesting\UnitTestResult.js" />
     <Content Include="unitTesting\UnitTestRunner.js" />
     <Content Include="unitTesting\unitTestResults.html" />
+    <Content Include="utils\staticRefs.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
