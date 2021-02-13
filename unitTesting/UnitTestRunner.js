@@ -50,11 +50,18 @@ class UnitTestRunner {
      * @param {string} testGroupName name of group this unit test should belong to
      * @param {string} testName name of the specific unit test, basically describing what it does and/or what method it's testing
      * @param {any} testMethod actual function that will produce the actual result fromt the test
-     * @param {any} expectedResult expected result from the test method in the previous argument, will be compared to this with '==' operator.
+     * @param {any} expectedResult expected result from the test method in the previous argument.
+     * Can be either a value or a method.
+     * If a value, it will be compared to the results of testMethod to the expected result with '===' operator.
+     * if a method, it must take a single argument (the expected result) and return a bool.
      */
     executeTest(testGroupName, testName, testMethod, expectedResult) {
         let actualResult = testMethod(); // run given test method
-        let passed = expectedResult == actualResult; // deteminer whether actual result matched the expected
+        let passed;
+        if (staticRefs.isFunction(expectedResult))
+            passed = expectedResult(actualResult);
+        else
+            passed = expectedResult === actualResult; // deteminer whether actual result matched the expected
         // create a new unit test result object to store this test's results
         let testResult = new UnitTestResult(testGroupName, testName, passed, expectedResult, actualResult);
         this.testResults.push(testResult); // add this test result to this classes's list of test results

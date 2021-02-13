@@ -422,9 +422,11 @@
     <Content Include="models\ButtonRound.js" />
     <Content Include="models\Rebus.js" />
     <Content Include="rebusCity.js" />
+    <Content Include="unitTesting\unitTestStyle.css" />
     <Content Include="unitTesting\UnitTestResult.js" />
     <Content Include="unitTesting\UnitTestRunner.js" />
     <Content Include="unitTesting\unitTestResults.html" />
+    <Content Include="unitTesting\unitTests.js" />
     <Content Include="utils\staticRefs.js" />
     <Content Include="Web.config" />
   </ItemGroup>

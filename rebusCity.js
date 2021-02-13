@@ -264,17 +264,17 @@ let activeRebusPositionMobile = new XYPosition(0, 10);
 /** Stores the number of full rebuses that fit on the current screen.
  * Recalculated every time window is resized.
  * @type {number} */
-let numOfRowsThatFitOnscreen;  
+let numOfRowsThatFitOnscreen;
 
 /** height (px) of a single row of rebuses, included buffer space below that row.
  * Updated whenever screen size changes.
  * @type {number} */
-let rowHeight; 
+let rowHeight;
 
 /** number of rows of rebuses in the current category. (filteredRebuses.length / 3, rounded up).
  * Updates when category is changed 
  * @type {number} */
-let numOfRows; 
+let numOfRows;
 
 //#endregion GLOBAL VARIABLES - REBUS DATA
 
@@ -304,7 +304,7 @@ let areRebusesCurrentlyScrolling = false;
 /** Amount (px) more needed to be scrolled.
  * Can be positive (down) or negative (up)
  * @type {number} */
-let scrollDistanceRemaining = 0; 
+let scrollDistanceRemaining = 0;
 
 //? how exactly is this used?
 /** number of times the native scrolling event (mouse wheel / touchpad swipe) is fired per 100ms.
@@ -320,7 +320,7 @@ let startingYValueWhenTouchStarted;
 /** x,y position at which the current touch/swipe started
  * Initial values don't matter, they will be reset as soon as a touch is started
  * @type {XYPosition} */
-let touchStartedPosition = new XYPosition(0,0);
+let touchStartedPosition = new XYPosition(0, 0);
 
 /** x,y position at which the current touch/swipe ended
  * Initial values don't matter, they will be reset as soon as a touch is ended
@@ -425,7 +425,7 @@ let scrollBar;
 
 //TODO: Refactor into get function from list of rebuses, maybe? so I don't ahve to keep updataing. But I don't want to slow down the frame rate either
 /** number of rebus puzzles that have been solved
- *  @type {number} */ 
+ *  @type {number} */
 let numberOfCompletedRebuses = 0;
 
 //TODO: refactor to 'get' function'?
@@ -440,7 +440,7 @@ let numberOfCompletedRebusesInCurrentCategory = 0;
 
 //TODO: refactor to 'get' function'?
 /** List of names of all solved rebuses (used for local storage i think, not the stats window)
- *  @type {string[]} */ 
+ *  @type {string[]} */
 let solvedRebusNames = [];
 
 /** Used to help calculate the 'worst guess yet' stat
@@ -449,30 +449,30 @@ let numberOfIncorrectGuesses = 0;
 
 //TODO: refactor to 'get' function'?
 /** number of hints a user has used
- *  @type {number} */ 
+ *  @type {number} */
 let numberOfHintsUsed = 0;
 
 //TODO: refactor to 'get' function'?
 /** category that the user has solved the most rebuses in, based on quantity (not %)
- *  @type {string} */ 
+ *  @type {string} */
 let strongestCategory = 'none yet';
 
 /** user's 'worst' incorrect guess made so far
- *  @type {string} */ 
+ *  @type {string} */
 let worstGuessSoFar = 'none yet';
 
 /** stores time (in seconds) that this tab (in the browser) has been active.
  * Stored in, and retrieved from, user's browser's local storage and cummulative over time.
- *  @type {number} */ 
+ *  @type {number} */
 let totalTimePlaying = 0;
 
 /** true if the tab with this script is active
- *  @type {bool} */ 
+ *  @type {bool} */
 let isTabActive = true;
 
 //TODO: refactor to 'get' function'?
 /** time (seconds) it's taken user to solve each puzzle, on average
- *  @type {number} */ 
+ *  @type {number} */
 let rebusSolvingRate;
 
 /** data table holding all of the rebus ranks imported from the rebus ranks .csv file
@@ -481,13 +481,13 @@ let rebusRankDataTable;
 
 /** array containing all rebus ranks.
  * Loaded from csv file during setup
- *  @type {string[]} */ 
+ *  @type {string[]} */
 let rebusRanks = [];
 
 //TODO: refactor to 'get' function'?
 /** stringified list of which hints for which rebuses have been used.
  * Used for saving to and loading from global storage (I think?)
- *  @type {string[]} */ 
+ *  @type {string[]} */
 let hintsUsed = [];
 
 //#endregion GLOBAL VARIABLES - USER STATS
@@ -512,7 +512,7 @@ const navbarHeightDesktop = 40;
 
 /** height of nav bar when in mobile mode (px)
  * @type {number} */
-const navbarHeightMobile = 120; 
+const navbarHeightMobile = 120;
 
 /** <div> element that contains main canvas and text input box
  * (type: p5.Element) */
@@ -644,7 +644,7 @@ function setup() {
     staticRefs.initializeCanvas();
     // creates all DOM elements and saves them all as p5.Element objects
     //TODO: group these all in one method
-    rebusRanks = createRanks();  // creates array of rebus ranks (for stats page) from table
+    rebusRanks = createRanks(rebusRankDataTable);  // creates array of rebus ranks (for stats page) from table
     createNavbar();
     createFooter();
     createLogo();
@@ -657,7 +657,7 @@ function setup() {
     createCategoryScoreP();
     createCopyrightP();
     createHintButtons();
-    createHintText(); 
+    createHintText();
     createScrollButtons();
     createScrollBar();
     // performs initial resizing of all DOM elements (including canvas) based on device screen size
@@ -1484,8 +1484,7 @@ function touchedOutsideActiveRebus() {
         if (
             (mouseX < textBoxPositionMobile.x || mouseX > width - textBoxPositionMobile.x) &&
             mouseY > textBoxPositionMobile.y &&
-            mouseY < textBoxPositionMobile.y + textBoxHeightMobile)
-        {
+            mouseY < textBoxPositionMobile.y + textBoxHeightMobile) {
             print('p3');
             bool = true;
         } else
@@ -3217,45 +3216,3 @@ function isRebusOnScreen(index) {
     }
     return bool;
 }
-
-//#region UNIT TEST
-
-/** Holds and runs all unit tests within! */
-function runAllUnitTests() {
-
-    let unitTests = new UnitTestRunner();
-
-    // test 1
-    unitTests.executeTest(
-        'Test Group 1',
-        'Did at least one Rebus load?',
-        function () {
-            return rebuses.length > 0 ? 'yes' : 'no';
-        },
-        'yes'
-    );
-
-    // test 2 attempt
-    unitTests.executeTest(
-        'Test Group 1',
-        'test 2',
-        function () { return true; },
-        true
-    );
-
-    // test 3
-    unitTests.executeTest(
-        'Test Group 2',
-        'expected to fail',
-        function () { return false; },
-        true
-    );
-
-
-    newpage = window.open('unitTesting/unitTestResults.html');
-    let str = unitTests.getFormattedTestResults();
-    //TODO: get this working better, not just with 'document.write' but actually add DOM elements to the body of the new test result page...
-    newpage.document.write(str);
-}
-
-//#endregion UNIT TEST

@@ -7,3 +7,7 @@ staticRefs.initializeCanvas = function() {
     canvas.id('canvas'); // sets id of DOM canvas element
     canvas.parent('container'); // sets parent of canvas as container div
 }
+
+staticRefs.isFunction = function(functionToCheck) {
+    return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+}
