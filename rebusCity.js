@@ -657,7 +657,7 @@ function setup() {
     createCategoryScoreP();
     createCopyrightP();
     createHintButtons();
-    createHintText();
+    createHintText(); 
     createScrollButtons();
     createScrollBar();
     // performs initial resizing of all DOM elements (including canvas) based on device screen size
