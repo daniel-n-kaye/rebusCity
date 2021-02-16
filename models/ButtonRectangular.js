@@ -1,8 +1,9 @@
-﻿//TODO: label/comment these, and possibly put them inside the button rectangular class somehow?
-const rectangularButtonWidth_desktopMode = 100;
-const rectangularButtonWidth_mobileMode = 130;
-const rectangularButtonHeight_desktopMode = 20;
-const rectangularButtonHeight_mobileMode = 50;
+﻿////TODO: label/comment these, and possibly put them inside the button rectangular class somehow?
+//const rectangularButtonWidth_desktopMode = 100;
+//const rectangularButtonWidth_mobileMode = 130;
+//const rectangularButtonHeight_desktopMode = 20;
+//const rectangularButtonHeight_mobileMode = 50;
+
 
 /** Rectangular button object drawn with p5.js methods (NOT a DOM element)
  * currently only used for confirmation of 'clear data' */
@@ -19,16 +20,16 @@ class ButtonRectangular {
         this.width;
 
         // set width to default value, based on weather we are in desktop or mobile mode
-        if (isDesktopMode) this.width = rectangularButtonWidth_desktopMode;
-        else this.width = rectangularButtonWidth_mobileMode;
+        if (isDesktopMode) this.width = ButtonRectangular.WIDTH_DESKTOP;
+        else this.width = ButtonRectangular.WIDTH_MOBILE;
 
         /** rectangular button's height (px)
          * @type {number} */
         this.height;
 
         // set height to default value, based on weather we are in desktop or mobile mode
-        if (isDesktopMode) this.height = rectangularButtonHeight_desktopMode;
-        else this.height = rectangularButtonHeight_mobileMode;
+        if (isDesktopMode) this.height = ButtonRectangular.HEIGHT_DESKTOP;
+        else this.height = this.ButtonRectangular.HEIGHT_MOBILE;
 
         /** position of top-left corner of button (px)
          @type {number} */
@@ -98,3 +99,11 @@ class ButtonRectangular {
         }
     }
 }
+
+// Decalre static properties
+//? Is there a better way to declare class static properties, and to actually make them non-editable?
+/** rest intellisense */
+ButtonRectangular.WIDTH_DESKTOP = 100;
+ButtonRectangular.WIDTH_MOBILE = 130;
+ButtonRectangular.HEIGHT_DESKTOP = 20;
+ButtonRectangular.HEIGHT_MOBILE = 50;
