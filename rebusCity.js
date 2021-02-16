@@ -740,10 +740,6 @@ function createRanks(rebusRankDataTable) {
 
 //#region DRAW LOOP
 
-////////////////////////////////////////////////////////////////////////////////
-// Draw Loop ///////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
 // runs continiously (once per frame) after setup runs once
 function draw() {
     if (loading) {  // if images are still loading...
@@ -762,7 +758,7 @@ function draw() {
             drawActiveRebus();  // draw the active rebus
         }
         drawGUI();  // draws all graphic user interface objects
-        if (swipeVelocityRemaining != 0)
+        if (swipeVelocityRemaining !== 0)
             swipeAnimation();
     }
 }
@@ -1261,12 +1257,12 @@ function optionsMenuInput() {
         print('clear selected!');
         closeButton = new ButtonRound();
         closeButton.char = 'X';
-        yesButton = new ButtonRectangular('yes');
-        noButton = new ButtonRectangular('no');
-        if (isMobileMode()) { // alters default button size to be larger if user in on a mobile device
-            yesButton.setSize(130, 50);
-            noButton.setSize(130, 50);
-        }
+        yesButton = new ButtonRectangular('yes', isDesktopMode());
+        noButton = new ButtonRectangular('no', isDesktopMode());
+        //if (isMobileMode()) { // alters default button size to be larger if user in on a mobile device
+        //    yesButton.setSize(130, 50);
+        //    noButton.setSize(130, 50);
+        //}
         currentState = States.clearMode;
         return;
     } else
@@ -1716,7 +1712,7 @@ function drawClearScreen() {
     closeButton.draw(); // draws close button
     // sets location of yes and no buttons
     yesButton.setLocation(width / 2 + 10, clearWindowHeight / 2 + buffer * 2);
-    noButton.setLocation(width / 2 - (yesButton.w + 10), clearWindowHeight / 2 + buffer * 2);
+    noButton.setLocation(width / 2 - (yesButton.width + 10), clearWindowHeight / 2 + buffer * 2);
     yesButton.draw();
     noButton.draw();
 }
@@ -2364,6 +2360,10 @@ function resizeButtons(screenSize) {
     } else {
         hintButton.opacity = 255;
     }
+
+    // if the rectangular yes/no buttons have been created, resize them!
+    if (yesButton) yesButton.resize(isDesktopMode());
+    if (noButton) noButton.resize(isDesktopMode());
 }
 
 // resizes the width of an active rebus display (only shown on mobileMode)
