@@ -3076,9 +3076,10 @@ function checkGuess(guess) {
     // checks to see if guess matches either the answer or any of the alternate answers
     let correct = false;
     //   print(adjustedAnswers);
-    for (let answer of adjustedAnswers) {
-        if (adjustedGuess === answer) { correct = true; }
-    }
+  
+    if (adjustedAnswer.includes(adjustedGuess)) { correct = true }
+
+    
     // if guess was correct...
     if (correct) {
         print('Correct guess!');
